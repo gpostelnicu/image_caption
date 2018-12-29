@@ -1,18 +1,20 @@
 #import argparse
 import csv
+import os
 import pickle
+from collections import defaultdict
 
 import fire
 import logging
-import sys
 
 import numpy as np
 from keras.applications import VGG16
 
-from keras_applications.imagenet_utils import preprocess_input
-from keras_preprocessing import image
+from keras.applications.imagenet_utils import preprocess_input
+from keras.preprocessing import image
 
 from image_caption import Flickr8KSequence, SimpleModel
+from image_caption.utils import setup_logging
 
 
 def train(image_encodings_path,
@@ -23,7 +25,7 @@ def train(image_encodings_path,
          img_dense_dim=128,
          lstm_units=128
          ):
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    setup_logging()
 
     logging.info("Loading Flickr8K dataset.")
     train_flkr = Flickr8KSequence(32,
@@ -64,6 +66,7 @@ def train(image_encodings_path,
 
 
 def encode_images(image_ids_path, im_dir, output_encodings):
+    setup_logging()
     image_ids = open(image_ids_path).read().split('\n')[:-1]
 
     model = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3), pooling='avg')
@@ -71,6 +74,7 @@ def encode_images(image_ids_path, im_dir, output_encodings):
     im_encodings = {}
     for imid in image_ids:
         im_path = os.path.join(im_dir, imid)
+        logging.info("Reading image {}".format(im_path))
         im = image.load_img(im_path, target_size=(224, 224))
         x = image.img_to_array(im)
         x = np.expand_dims(x, axis=0)
@@ -85,16 +89,23 @@ def encode_images(image_ids_path, im_dir, output_encodings):
         pickle.dump(im_encodings, fh)
 
 
-def encode_text(image_captions_path, output_path):
+def encode_text(image_captions_path, imids_path, output_path):
+    captions = defaultdict(list)
+    with open(image_captions_path) as csvfile:
+        reader = csv.reader(csvfile, delimiter='\t')
+        for row in reader:
+            imid = row[0]
+            imid = imid[:len(imid) - 2]  # strip annotation number
+            caption = row[1]
+            captions[imid].append(caption)
+
+    imids = open(imids_path).read().split('\n')[:-1]
     with open(output_path, 'w') as outfile:
         writer = csv.writer(outfile, delimiter='\t')
-        with open(image_captions_path) as csvfile:
-            reader = csv.reader(csvfile, delimiter='\t')
-            for row in reader:
-                imid = row[0]
-                imid = imid[:len(imid) - 2]  # strip annotation number
-                caption = row[1]
-                writer.write([
+        for imid in imids:
+            im_captions = captions[imid]
+            for caption in im_captions:
+                writer.writerow([
                     imid,
                     '<start> {} <end>'.format(caption)
                 ])
