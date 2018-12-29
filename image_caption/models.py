@@ -6,13 +6,15 @@ from keras.optimizers import Adam
 
 
 class SimpleModel(object):
-    def __init__(self, img_embedding_shape, max_caption_len, vocab_size, embedding_dim, img_dense_dim, lstm_units):
+    def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
+                 embedding_dim, img_dense_dim, lstm_units, learning_rate):
         self.img_embedding_shape = img_embedding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
         self.embedding_dim = embedding_dim
         self.img_dense_dim = img_dense_dim
         self.lstm_units = lstm_units
+        self.learning_rate = learning_rate
 
         self.keras_model = self._build_model()
 
@@ -26,7 +28,7 @@ class SimpleModel(object):
 
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
-        model.compile(optimizer=Adam(lr=1e-5, clipnorm=5.0),
+        model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=5.0),
                       loss=categorical_crossentropy)
         model.summary()
         return model

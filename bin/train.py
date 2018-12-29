@@ -27,7 +27,8 @@ def train(train_image_encodings_path,
           embedding_dim=256,
           img_dense_dim=128,
           lstm_units=128,
-          batch_size=64
+          batch_size=64,
+          learning_rate=1e-5
           ):
     setup_logging()
 
@@ -56,7 +57,8 @@ def train(train_image_encodings_path,
         vocab_size=train_flkr.max_vocab_index,
         embedding_dim=embedding_dim,
         img_dense_dim=img_dense_dim,
-        lstm_units=lstm_units
+        lstm_units=lstm_units,
+        learning_rate=learning_rate
     )
 
     callbacks = [
