@@ -11,7 +11,7 @@ import numpy as np
 from keras.applications import VGG16
 
 from keras.applications.imagenet_utils import preprocess_input
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from keras.preprocessing import image
 
 from image_caption import Flickr8KSequence, SimpleModel
@@ -61,7 +61,8 @@ def train(train_image_encodings_path,
 
     callbacks = [
         ModelCheckpoint(output_path, save_best_only=True),
-        EarlyStopping(patience=10)
+        EarlyStopping(patience=10),
+        TensorBoard()
     ]
     model.keras_model.fit_generator(
         train_flkr,
