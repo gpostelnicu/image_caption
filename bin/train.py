@@ -17,26 +17,27 @@ from image_caption import Flickr8KSequence, SimpleModel
 from image_caption.utils import setup_logging
 
 
-def train(image_encodings_path,
-         training_captions_path,
-         test_captions_path,
-         num_epochs,
-         embedding_dim=256,
-         img_dense_dim=128,
-         lstm_units=128
-         ):
+def train(train_image_encodings_path,
+          training_captions_path,
+          test_image_encodings_path,
+          test_captions_path,
+          num_epochs,
+          embedding_dim=256,
+          img_dense_dim=128,
+          lstm_units=128
+          ):
     setup_logging()
 
     logging.info("Loading Flickr8K dataset.")
     train_flkr = Flickr8KSequence(32,
-                                  encodings_path=image_encodings_path,
+                                  encodings_path=train_image_encodings_path,
                                   captions_path=training_captions_path)
     logging.info("Loaded dataset. Number of samples: {}, number of steps: {}".format(
         len(train_flkr.captions), len(train_flkr)
     ))
     test_flkr = Flickr8KSequence(
         32,
-        encodings_path=image_encodings_path,
+        encodings_path=test_image_encodings_path,
         captions_path=test_captions_path,
         max_length=train_flkr.max_length,
         index_word=train_flkr.index_word
