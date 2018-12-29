@@ -24,19 +24,20 @@ def train(train_image_encodings_path,
           num_epochs,
           embedding_dim=256,
           img_dense_dim=128,
-          lstm_units=128
+          lstm_units=128,
+          batch_size=64
           ):
     setup_logging()
 
     logging.info("Loading Flickr8K dataset.")
-    train_flkr = Flickr8KSequence(32,
+    train_flkr = Flickr8KSequence(batch_size,
                                   encodings_path=train_image_encodings_path,
                                   captions_path=training_captions_path)
     logging.info("Loaded dataset. Number of samples: {}, number of steps: {}".format(
         len(train_flkr.captions), len(train_flkr)
     ))
     test_flkr = Flickr8KSequence(
-        32,
+        batch_size,
         encodings_path=test_image_encodings_path,
         captions_path=test_captions_path,
         max_length=train_flkr.max_length,

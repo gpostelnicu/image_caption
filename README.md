@@ -36,7 +36,7 @@ PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py encode-text --image-captions-pa
 * To run training:
 
 ```bash
-PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train --training-captions-path data/gen1/train_captions.tsv --test-captions-path data/gen1/test_captions.tsv --train-image-embeddings-path data/gen1/train_image_encodings.pkl --test-image-embeddings-path data/gen1/test_image_encodings.pkl
+PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train --training-captions-path data/gen1/train_captions.tsv --test-captions-path data/gen1/test_captions.tsv --train-image-encodings-path data/gen1/train_image_encodings.pkl --test-image-encodings-path data/gen1/test_image_encodings.pkl --num-epochs 50
 ```
 
 ## Credits
