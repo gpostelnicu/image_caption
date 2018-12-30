@@ -119,7 +119,7 @@ class Flickr8kNextWordSequence(Sequence):
 
         for idx in batch_idx:
             idx_next = self.ds_next[idx]
-            pred = np.zeros(self.max_vocab_size)
+            pred = np.zeros((self.max_vocab_size,))
             pred[idx_next] = 1.
             next_word.append(pred)
 
