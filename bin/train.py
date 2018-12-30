@@ -66,7 +66,7 @@ def train2(
     model = EncoderDecoderModel(
         img_encoding_shape=(512,),
         max_caption_len=train_flkr.max_length,
-        vocab_size=len(tok.index_word),
+        vocab_size=1 + len(tok.index_word),
         embedding_dim=embedding_dim,
         lstm_units=lstm_units,
         img_dense_dim=img_dense_dim
