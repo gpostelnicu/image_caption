@@ -173,9 +173,9 @@ def encode_images(image_ids_path, im_dir, output_encodings, num_image_transforms
         logging.info("Reading image {}".format(im_path))
         im = image.load_img(im_path, target_size=(224, 224))
         for i in range(num_image_transforms):
-            rand_im = datagen.random_transform(im)
-            x = image.img_to_array(rand_im)
-            x = np.expand_dims(x, axis=0)
+            x = image.img_to_array(im)
+            rand_x = datagen.random_transform(x)
+            x = np.expand_dims(rand_x, axis=0)
             x = preprocess_input(x)
             norm_im = np.asarray(x)
             prediction = model.predict(norm_im)
