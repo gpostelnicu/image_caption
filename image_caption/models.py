@@ -14,6 +14,7 @@ class EncoderDecoderModel(object):
         self.embedding_dim = embedding_dim
         self.img_dense_dim = img_dense_dim
         self.lstm_units = lstm_units
+        self.decoder_dense_dim = decoder_dense_dim
         self.learning_rate = learning_rate
 
         self.keras_model = self._build_model()
