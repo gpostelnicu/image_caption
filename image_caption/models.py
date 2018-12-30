@@ -20,10 +20,10 @@ class EncoderDecoderModel(object):
         self.keras_model = self._build_model()
 
     def _build_model(self):
-        image_input = Input(shape=self.img_embedding_shape)
+        image_input = Input(shape=self.img_embedding_shape, name='image_input')
         full_image = Dense(self.lstm_units, activation='relu', name='image_feature')(image_input)
 
-        text_input = Input(shape=(self.max_caption_len,))
+        text_input = Input(shape=(self.max_caption_len,), name='text_input')
         full_text = Embedding(self.vocab_size, self.embedding_dim,
                               input_length=self.max_caption_len, mask_zero=True)(text_input)
         full_text = LSTM(self.lstm_units, name='text_feature')(full_text)

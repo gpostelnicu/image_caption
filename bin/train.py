@@ -48,8 +48,8 @@ def train2(
 
     # Generate tokenizer
     tok = Tokenizer()
-    tok.fit_on_sequences(train_flkr.captions)
-    tok.fit_on_sequences(test_flkr.captions)
+    tok.fit_on_texts(train_flkr.captions)
+    tok.fit_on_texts(test_flkr.captions)
     output_path = '{}-tok.pkl'.format(output_prefix)
     logging.info('Writing tokenizer file to file {}'.format(output_path))
     pickle.dump(tok, open(output_path, 'wb'))
