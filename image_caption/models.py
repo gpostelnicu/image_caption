@@ -26,7 +26,7 @@ class EncoderDecoderModel(object):
         text_input = Input(shape=(self.max_caption_len,))
         full_text = Embedding(self.vocab_size, self.embedding_dim,
                               input_length=self.max_caption_len)(text_input)
-        full_text = LSTM(self.lstm_units, name='text_feature')(full_text)
+        full_text = LSTM(self.lstm_units, mask_zero=True, name='text_feature')(full_text)
 
         encoded = Add()([full_text, full_image])
 

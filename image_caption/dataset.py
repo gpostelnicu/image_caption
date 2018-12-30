@@ -13,7 +13,7 @@ from keras.utils import Sequence, to_categorical
 class Flickr8kDataset(object):
     def __init__(self, captions_path):
         self.captions, self.image_ids = self._load_captions(captions_path)
-        self.max_length = max(cap for cap in self.captions)
+        self.max_length = max(len(cap) for cap in self.captions)
 
     def __len__(self):
         return len(self.captions)
