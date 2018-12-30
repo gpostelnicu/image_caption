@@ -184,7 +184,7 @@ def inference(im_path, model_path, tok_path):
 
     def encode_partial_cap(partial_cap, im, ds):
         input_text = [[tok.word_index[w] for w in partial_cap if w in tok.word_index]]
-        input_text = pad_sequences(input_text, maxlen=ds.max_length, padding='post')
+        input_text = pad_sequences(input_text, maxlen=41, padding='post')
         im = np.array([im])
         return [im, input_text]
 
