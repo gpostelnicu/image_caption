@@ -176,7 +176,7 @@ def encode_images(image_ids_path, im_dir, output_encodings, num_image_transforms
         pickle.dump(im_encodings, fh)
 
 
-def inference(im_path, model_path, tok_path, max_len=39):
+def inference(im_path, model_path, tok_path, max_cap_len=39):
     tok = pickle.load(open(tok_path, 'rb'))
     model = load_model(model_path)
     encoder = ImageEncoder(random_transform=False)
@@ -184,12 +184,12 @@ def inference(im_path, model_path, tok_path, max_len=39):
 
     def encode_partial_cap(partial_cap, im, ds):
         input_text = [[tok.word_index[w] for w in partial_cap if w in tok.word_index]]
-        input_text = pad_sequences(input_text, maxlen=max_len, padding='post')
+        input_text = pad_sequences(input_text, maxlen=max_cap_len, padding='post')
         im = np.array([im])
         return [im, input_text]
 
-    partial_cap = ['<start>']
-    EOS_TOKEN = '<end>'
+    partial_cap = ['starttoken']
+    EOS_TOKEN = 'endtoken'
 
     while True:
         inputs = encode_partial_cap(partial_cap, im_encoding, tok)
@@ -221,7 +221,7 @@ def encode_text(image_captions_path, imids_path, output_path):
             for caption in im_captions:
                 writer.writerow([
                     imid,
-                    '<start> {} <end>'.format(caption)
+                    'starttoken {} endtoken'.format(caption)
                 ])
 
 
