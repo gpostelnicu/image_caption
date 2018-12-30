@@ -95,7 +95,7 @@ class Flickr8kNextWordSequence(Sequence):
         self.ds = flickr_dataset
         self.encodings = pickle.load(open(encodings_path, 'rb'))
         self.tok = tokenizer
-        self.max_vocab_size = 1 + len(self.tok.index_word)
+        self.max_vocab_size = len(self.tok.index_word)
         self.max_length = max_length
         self.num_image_versions = num_image_versions
 
