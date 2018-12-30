@@ -31,7 +31,7 @@ class EncoderDecoderModel(object):
         full_text = Embedding(self.vocab_size, self.embedding_dim,
                               input_length=self.max_caption_len, mask_zero=True)(text_input)
         full_text = LSTM(self.lstm_units, name='text_feature',
-                         dropout=dropout, recurrent_dropout=recurrent_dropout)(full_text)
+                         dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(full_text)
 
         encoded = Add()([full_text, full_image])
 
