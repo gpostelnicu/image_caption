@@ -37,19 +37,11 @@ def train2(
     setup_logging()
 
     logging.info("Loading Flickr8K train dataset.")
-    train_flkr = Flickr8kDataset(batch_size,
-                                  encodings_path=train_image_encodings_path,
-                                  captions_path=training_captions_path)
+    train_flkr = Flickr8kDataset(captions_path=training_captions_path)
     logging.info("Loaded train dataset. Number of samples: {}, number of steps: {}".format(
         len(train_flkr.captions), len(train_flkr)
     ))
-    test_flkr = Flickr8kDataset(
-        batch_size,
-        encodings_path=test_image_encodings_path,
-        captions_path=test_captions_path,
-        max_length=train_flkr.max_length,
-        index_word=train_flkr.index_word
-    )
+    test_flkr = Flickr8kDataset(captions_path=test_captions_path)
     logging.info("Loaded test dataset. Number of samples: {}, number of steps: {}".format(
         len(test_flkr.captions), len(test_flkr)
     ))
@@ -87,10 +79,10 @@ def train2(
         TensorBoard()
     ]
     model.keras_model.fit_generator(
-        train_flkr,
-        steps_per_epoch=len(train_flkr),
-        validation_data=test_flkr,
-        validation_steps=len(test_flkr),
+        train_seq,
+        steps_per_epoch=len(train_seq),
+        validation_data=test_seq,
+        validation_steps=len(test_seq),
         epochs=num_epochs,
         verbose=1,
         callbacks=callbacks

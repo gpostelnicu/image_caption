@@ -20,7 +20,7 @@ class EncoderDecoderModel(object):
 
     def _build_model(self):
         image_input = Input(shape=self.img_embedding_shape)
-        full_image = Dense(256, activation='relu', name='image_feature')(image_input)
+        full_image = Dense(self.lstm_units, activation='relu', name='image_feature')(image_input)
 
         text_input = Input(shape=(self.max_caption_len,))
         full_text = Embedding(self.vocab_size, self.embedding_dim,
