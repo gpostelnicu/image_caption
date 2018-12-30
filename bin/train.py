@@ -33,7 +33,9 @@ def train2(
     lstm_units=128,
     batch_size=64,
     num_image_versions=5,
-    learning_rate=1e-5):
+    learning_rate=1e-5,
+    dropout=0.1,
+    recurrent_dropout=0.1):
     setup_logging()
 
     logging.info("Loading Flickr8K train dataset.")
@@ -69,7 +71,10 @@ def train2(
         vocab_size=1 + len(tok.index_word),
         embedding_dim=embedding_dim,
         lstm_units=lstm_units,
-        img_dense_dim=img_dense_dim
+        img_dense_dim=img_dense_dim,
+        learning_rate=learning_rate,
+        dropout=dropout,
+        recurrent_dropout=recurrent_dropout
     )
 
     out_model = '{}_model.h5'.format(output_prefix)
