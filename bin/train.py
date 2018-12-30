@@ -17,7 +17,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing.text import Tokenizer
 
 from image_caption import Flickr8KSequence, SimpleModel
-from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence
+from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence
 from image_caption.models import EncoderDecoderModel
 from image_caption.utils import setup_logging
 
@@ -54,11 +54,11 @@ def train2(
     logging.info('Writing tokenizer file to file {}'.format(output_path))
     pickle.dump(tok, open(output_path, 'wb'))
 
-    train_seq = Flickr8kEncodedSequence(
+    train_seq = Flickr8kNextWordSequence(
         train_flkr, batch_size, train_image_encodings_path,
         tok, train_flkr.max_length, num_image_versions
     )
-    test_seq = Flickr8kEncodedSequence(
+    test_seq = Flickr8kNextWordSequence(
         test_flkr, batch_size, test_image_encodings_path,
         tok, train_flkr.max_length, num_image_versions
     )

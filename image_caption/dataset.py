@@ -60,7 +60,7 @@ class Flickr8kEncodedSequence(Sequence):
         images = []
 
         for idx in batch_idx:
-            crt_img = self._get_encodings_image(self.ds.image_ids[idx])
+            crt_img = self._get_image_encoding(self.ds.image_ids[idx])
             seq_caption = self.tok.texts_to_sequences(self.ds.captions[idx])
 
             partial_captions.append(seq_caption[:-1])
@@ -78,7 +78,7 @@ class Flickr8kEncodedSequence(Sequence):
         images = np.asarray(images)
         return [[images, partial_captions], outputs]
 
-    def _get_encodings_image(self, imid):
+    def _get_image_encoding(self, imid):
         i = random.randint(0, self.num_image_versions)
         full_id = '{}-{}'.format(imid, i)
         encoding = self.encodings[full_id]
@@ -87,7 +87,7 @@ class Flickr8kEncodedSequence(Sequence):
 
 
 class Flickr8kNextWordSequence(Sequence):
-    def __init__(self, flickr_dataset, batch_size, encodings_path, tokenizer, max_length):
+    def __init__(self, flickr_dataset, batch_size, encodings_path, tokenizer, max_length, num_image_versions):
         """
         output_type can be 'word' or 'sequence'
         """
@@ -97,6 +97,7 @@ class Flickr8kNextWordSequence(Sequence):
         self.tok = tokenizer
         self.max_vocab_size = 1 + len(self.tok.index_word)
         self.max_length = max_length
+        self.num_image_versions = num_image_versions
 
         self.ds_prev, self.ds_imid, self.ds_next = self._split_captions()
 
@@ -142,6 +143,12 @@ class Flickr8kNextWordSequence(Sequence):
                 out_imid.append(imid)
                 out_next.append(caption[j])
         return out_prev, out_imid, out_next
+
+    def _get_image_encoding(self, imid):
+        i = random.randint(0, self.num_image_versions)
+        full_id = '{}-{}'.format(imid, i)
+        encoding = self.encodings[full_id]
+        return encoding
 
 
 class Flickr8KSequence(Sequence):
