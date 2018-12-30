@@ -8,16 +8,16 @@ import fire
 import logging
 
 import numpy as np
-from keras.applications import VGG16
 
-from keras.applications.imagenet_utils import preprocess_input
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from keras.models import load_model
 from keras.preprocessing import image
-from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 
 from image_caption import Flickr8KSequence, SimpleModel
 from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence
+from image_caption.image_encoder import ImageEncoder
 from image_caption.models import EncoderDecoderModel
 from image_caption.utils import setup_logging
 
@@ -161,12 +161,7 @@ def encode_images(image_ids_path, im_dir, output_encodings, num_image_transforms
     setup_logging()
     image_ids = open(image_ids_path).read().split('\n')[:-1]
 
-    model = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3), pooling='avg')
-
-    datagen = ImageDataGenerator(
-        rotation_range=2.,
-        zoom_range=.02,
-    )
+    encoder = ImageEncoder(random_transform=True)
 
     im_encodings = {}
     for imid in image_ids:
@@ -174,18 +169,38 @@ def encode_images(image_ids_path, im_dir, output_encodings, num_image_transforms
         logging.info("Reading image {}".format(im_path))
         im = image.load_img(im_path, target_size=(224, 224))
         for i in range(num_image_transforms):
-            x = image.img_to_array(im)
-            rand_x = datagen.random_transform(x)
-            x = np.expand_dims(rand_x, axis=0)
-            x = preprocess_input(x)
-            norm_im = np.asarray(x)
-            prediction = model.predict(norm_im)
-            prediction = np.reshape(prediction, prediction.shape[1])
-
+            prediction = encoder.process(im)
             im_encodings['{}-{}'.format(imid, i)] = prediction
 
     with open(output_encodings, 'wb') as fh:
         pickle.dump(im_encodings, fh)
+
+
+def inference(im_path, model_path, tok_path):
+    tok = pickle.load(open(tok_path, 'rb'))
+    model = load_model(model_path)
+    encoder = ImageEncoder(random_transform=False)
+    im_encoding = encoder.process(im_path)
+
+    def encode_partial_cap(partial_cap, im, ds):
+        input_text = [[tok.word_index[w] for w in partial_cap if w in tok.word_index]]
+        input_text = pad_sequences(input_text, maxlen=ds.max_length, padding='post')
+        im = np.array([im])
+        return [im, input_text]
+
+    partial_cap = ['<start>']
+    EOS_TOKEN = '<end>'
+
+    while True:
+        inputs = encode_partial_cap(partial_cap, im_encoding, tok)
+        preds = model.predict(inputs)
+        next_idx = np.argmax(preds, axis=-1)[0]
+        next_word = tok.index_word[next_idx]
+        if next_word == EOS_TOKEN or len(partial_cap) == 39:
+            break
+        partial_cap.append(next_word)
+
+    print('Predicted: {}'.format(' '.join(partial_cap)))
 
 
 def encode_text(image_captions_path, imids_path, output_path):
