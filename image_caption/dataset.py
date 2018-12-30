@@ -60,7 +60,7 @@ class Flickr8kEncodedSequence(Sequence):
         images = []
 
         for idx in batch_idx:
-            crt_img = self._get_encodings(self.ds.image_ids[idx])
+            crt_img = self._get_encodings_image(self.ds.image_ids[idx])
             seq_caption = self.tok.texts_to_sequences(self.ds.captions[idx])
 
             partial_captions.append(seq_caption[:-1])
