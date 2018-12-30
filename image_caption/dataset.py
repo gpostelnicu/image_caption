@@ -113,19 +113,13 @@ class Flickr8kNextWordSequence(Sequence):
     def __getitem__(self, item):
         batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
 
-        partial_captions = [self.ds_prev[i] for i in batch_idx]
         images = [self._get_image_encoding(self.ds_imid[i]) for i in batch_idx]
-        next_word = []
-
-        for idx in batch_idx:
-            idx_next = self.ds_next[idx]
-            pred = np.zeros((self.max_vocab_size,))
-            pred[idx_next] = 1.
-            next_word.append(pred)
-
-        partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
-        out = to_categorical(next_word, num_classes=self.max_vocab_size)
         images = np.asarray(images)
+
+        partial_captions = [self.ds_prev[i] for i in batch_idx]
+        partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
+
+        out = to_categorical([self.ds_next[i] for i in batch_idx], num_classes=self.max_vocab_size)
         return [[images, partial_captions], out]
 
     def _split_captions(self):
