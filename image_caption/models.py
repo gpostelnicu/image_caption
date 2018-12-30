@@ -6,9 +6,9 @@ from keras.optimizers import Adam
 
 
 class EncoderDecoderModel(object):
-    def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
+    def __init__(self, img_encoding_shape, max_caption_len, vocab_size,
                  embedding_dim, lstm_units, img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4):
-        self.img_embedding_shape = img_embedding_shape
+        self.img_encoding_shape = img_encoding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
         self.embedding_dim = embedding_dim
@@ -21,7 +21,7 @@ class EncoderDecoderModel(object):
         self.keras_model.summary()
 
     def _build_model(self):
-        image_input = Input(shape=self.img_embedding_shape, name='image_input')
+        image_input = Input(shape=self.img_encoding_shape, name='image_input')
         full_image = Dense(self.lstm_units, activation='relu', name='image_feature')(image_input)
 
         text_input = Input(shape=(self.max_caption_len,), name='text_input')
