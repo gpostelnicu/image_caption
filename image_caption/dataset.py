@@ -79,7 +79,7 @@ class Flickr8kEncodedSequence(Sequence):
         return [[images, partial_captions], outputs]
 
     def _get_image_encoding(self, imid):
-        i = random.randint(0, self.num_image_versions)
+        i = random.randint(0, self.num_image_versions - 1)
         full_id = '{}-{}'.format(imid, i)
         encoding = self.encodings[full_id]
         return encoding
@@ -145,7 +145,7 @@ class Flickr8kNextWordSequence(Sequence):
         return out_prev, out_imid, out_next
 
     def _get_image_encoding(self, imid):
-        i = random.randint(0, self.num_image_versions)
+        i = random.randint(0, self.num_image_versions - 1)
         full_id = '{}-{}'.format(imid, i)
         encoding = self.encodings[full_id]
         return encoding
