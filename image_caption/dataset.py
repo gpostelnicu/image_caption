@@ -105,7 +105,7 @@ class Flickr8kNextWordSequence(Sequence):
         self.idx = list(range(len(self.ds_prev)))
 
     def __len__(self):
-        return len(self.idx)
+        return len(self.idx) // self.batch_size
 
     def on_epoch_end(self):
         random.shuffle(self.idx)
