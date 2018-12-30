@@ -36,6 +36,7 @@ def train2(
     learning_rate=1e-5,
     dropout=0.1,
     recurrent_dropout=0.1,
+    decoder_dense_dim=256,
     num_dense_layers=1):
     setup_logging()
 
@@ -76,6 +77,7 @@ def train2(
         learning_rate=learning_rate,
         dropout=dropout,
         recurrent_dropout=recurrent_dropout,
+        decoder_dense_dim=decoder_dense_dim,
         num_dense_layers=num_dense_layers
     )
 
