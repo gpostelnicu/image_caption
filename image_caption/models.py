@@ -27,12 +27,14 @@ class EncoderDecoderModel(object):
     def _build_model(self):
         image_input = Input(shape=self.img_encoding_shape, name='image_input')
         full_image = Dense(self.lstm_units, activation='relu', name='image_feature')(image_input)
+        full_image = BatchNormalization()(full_image)
 
         text_input = Input(shape=(self.max_caption_len,), name='text_input')
         full_text = Embedding(self.vocab_size, self.embedding_dim,
                               input_length=self.max_caption_len, mask_zero=True)(text_input)
         full_text = LSTM(self.lstm_units, name='text_feature',
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(full_text)
+        full_text = BatchNormalization()(full_text)
 
         encoded = Add()([full_text, full_image])
 
