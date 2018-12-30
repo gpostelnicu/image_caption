@@ -1,8 +1,41 @@
 from keras import Model
 from keras.layers import concatenate, Input, Dense, RepeatVector, Embedding, BatchNormalization, Bidirectional, LSTM, \
-    TimeDistributed
+    TimeDistributed, Add
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
+
+
+class EncoderDecoderModel(object):
+    def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
+                 embedding_dim, lstm_units, img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4):
+        self.img_embedding_shape = img_embedding_shape
+        self.max_caption_len = max_caption_len
+        self.vocab_size = vocab_size
+        self.embedding_dim = embedding_dim
+        self.img_dense_dim = img_dense_dim
+        self.lstm_units = lstm_units
+        self.learning_rate = learning_rate
+
+        self.keras_model = self._build_model()
+
+    def _build_model(self):
+        image_input = Input(shape=self.img_embedding_shape)
+        full_image = Dense(256, activation='relu', name='image_feature')(image_input)
+
+        text_input = Input(shape=(self.max_caption_len,))
+        full_text = Embedding(self.vocab_size, self.embedding_dim,
+                              input_length=self.max_caption_len)(text_input)
+        full_text = LSTM(self.lstm_units, name='text_feature')(full_text)
+
+        encoded = Add()([full_text, full_image])
+
+        decoder = Dense(self.decoder_dense_dim, activation='relu')(encoded)
+        output = Dense(self.vocab_size, activation='softmax')(decoder)
+
+        model = Model(inputs=[image_input, text_input], outputs=output)
+        model.compile(loss='categorical_crossentropy', optimizer='adam')
+
+        return model
 
 
 class SimpleModel(object):
@@ -28,7 +61,7 @@ class SimpleModel(object):
 
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
-        model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=5.0),
+        model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=1.0),
                       loss=categorical_crossentropy)
         model.summary()
         return model
