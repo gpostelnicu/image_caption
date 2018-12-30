@@ -18,6 +18,7 @@ class EncoderDecoderModel(object):
         self.learning_rate = learning_rate
 
         self.keras_model = self._build_model()
+        self.keras_model.summary()
 
     def _build_model(self):
         image_input = Input(shape=self.img_embedding_shape, name='image_input')
