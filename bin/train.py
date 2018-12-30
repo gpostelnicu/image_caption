@@ -35,7 +35,8 @@ def train2(
     num_image_versions=5,
     learning_rate=1e-5,
     dropout=0.1,
-    recurrent_dropout=0.1):
+    recurrent_dropout=0.1,
+    num_dense_layers=1):
     setup_logging()
 
     logging.info("Loading Flickr8K train dataset.")
@@ -74,7 +75,8 @@ def train2(
         img_dense_dim=img_dense_dim,
         learning_rate=learning_rate,
         dropout=dropout,
-        recurrent_dropout=recurrent_dropout
+        recurrent_dropout=recurrent_dropout,
+        num_dense_layers=num_dense_layers
     )
 
     out_model = '{}_model.h5'.format(output_prefix)

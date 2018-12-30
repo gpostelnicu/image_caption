@@ -8,7 +8,7 @@ from keras.optimizers import Adam
 class EncoderDecoderModel(object):
     def __init__(self, img_encoding_shape, max_caption_len, vocab_size,
                  embedding_dim, lstm_units, img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
-                 dropout=0.0, recurrent_dropout=0.0):
+                 dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1):
         self.img_encoding_shape = img_encoding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -19,6 +19,7 @@ class EncoderDecoderModel(object):
         self.learning_rate = learning_rate
         self.dropout = dropout
         self.recurrent_dropout = recurrent_dropout
+        self.num_dense_layers = num_dense_layers
 
         self.keras_model = self._build_model()
         self.keras_model.summary()
@@ -35,7 +36,9 @@ class EncoderDecoderModel(object):
 
         encoded = Add()([full_text, full_image])
 
-        decoder = Dense(self.decoder_dense_dim, activation='relu')(encoded)
+        decoder = encoded
+        for _ in range(self.num_dense_layers):
+            decoder = Dense(self.decoder_dense_dim, activation='relu')(decoder)
         output = Dense(self.vocab_size, activation='softmax')(decoder)
 
         model = Model(inputs=[image_input, text_input], outputs=output)
