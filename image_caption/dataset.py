@@ -114,7 +114,7 @@ class Flickr8kNextWordSequence(Sequence):
         batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
 
         partial_captions = [self.ds_prev[i] for i in batch_idx]
-        images = [self.encodings[self.ds_imid[i]] for i in batch_idx]
+        images = [self._get_image_encoding(self.ds_imid[i]) for i in batch_idx]
         next_word = []
 
         for idx in batch_idx:
