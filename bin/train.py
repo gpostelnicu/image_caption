@@ -27,6 +27,7 @@ def train2(
     training_captions_path,
     test_image_encodings_path,
     test_captions_path,
+    embeddings_path,
     output_prefix,
     num_epochs,
     embedding_dim=256,
