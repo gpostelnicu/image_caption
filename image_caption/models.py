@@ -44,7 +44,7 @@ class EncoderDecoderModel(object):
         decoder = encoded
         for _ in range(self.num_dense_layers):
             decoder = Dense(self.decoder_dense_dim, activation='relu')(decoder)
-        output = Dense(self.embedding_dim)(decoder)
+        output = Dense(self.embedding_dim, activation='tanh')(decoder)
 
         model = Model(inputs=[image_input, text_input], outputs=output)
         model.compile(loss=self.loss, optimizer='adam')
