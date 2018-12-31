@@ -65,11 +65,11 @@ def train2(
 
     train_seq = Flickr8kNextWordSequence(
         train_flkr, batch_size, train_image_encodings_path,
-        tok, train_flkr.max_length, num_image_versions, embeddings
+        tok, train_flkr.max_length, num_image_versions, embedding_matrix
     )
     test_seq = Flickr8kNextWordSequence(
         test_flkr, batch_size, test_image_encodings_path,
-        tok, train_flkr.max_length, num_image_versions, embeddings
+        tok, train_flkr.max_length, num_image_versions, embedding_matrix
     )
 
     model = EncoderDecoderModel(
