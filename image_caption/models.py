@@ -9,7 +9,7 @@ class EncoderDecoderModel(object):
     def __init__(self, img_encoding_shape, max_caption_len, vocab_size,
                  embedding_dim, text_embedding_matrix, lstm_units,
                  img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
-                 dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1):
+                 dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1, loss='categorical_crossentropy'):
         self.img_encoding_shape = img_encoding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -22,6 +22,7 @@ class EncoderDecoderModel(object):
         self.dropout = dropout
         self.recurrent_dropout = recurrent_dropout
         self.num_dense_layers = num_dense_layers
+        self.loss = loss
 
         self.keras_model = self._build_model()
         self.keras_model.summary()
@@ -43,10 +44,12 @@ class EncoderDecoderModel(object):
         decoder = encoded
         for _ in range(self.num_dense_layers):
             decoder = Dense(self.decoder_dense_dim, activation='relu')(decoder)
-        output = Dense(self.vocab_size, activation='softmax')(decoder)
+        output = Dense(self.vocab_size,
+                       activation='softmax' if self.loss == 'categorical_crossentropy' else None
+                       )(decoder)
 
         model = Model(inputs=[image_input, text_input], outputs=output)
-        model.compile(loss='categorical_crossentropy', optimizer='adam')
+        model.compile(loss=self.loss, optimizer='adam')
 
         return model
 

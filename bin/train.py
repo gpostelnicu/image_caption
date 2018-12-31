@@ -30,7 +30,7 @@ def train2(
     embeddings_path,
     output_prefix,
     num_epochs,
-    embedding_dim=256,
+    embedding_dim=300,
     img_dense_dim=128,
     lstm_units=128,
     batch_size=64,
@@ -60,17 +60,17 @@ def train2(
     logging.info('Writing tokenizer file to file {}'.format(output_path))
     pickle.dump(tok, open(output_path, 'wb'))
 
+    embeddings = load_fasttext(embeddings_path)
+    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim)
+
     train_seq = Flickr8kNextWordSequence(
         train_flkr, batch_size, train_image_encodings_path,
-        tok, train_flkr.max_length, num_image_versions
+        tok, train_flkr.max_length, num_image_versions, embeddings
     )
     test_seq = Flickr8kNextWordSequence(
         test_flkr, batch_size, test_image_encodings_path,
-        tok, train_flkr.max_length, num_image_versions
+        tok, train_flkr.max_length, num_image_versions, embeddings
     )
-
-    embeddings = load_fasttext(embeddings_path)
-    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim)
 
     model = EncoderDecoderModel(
         img_encoding_shape=(512,),
@@ -84,7 +84,8 @@ def train2(
         dropout=dropout,
         recurrent_dropout=recurrent_dropout,
         decoder_dense_dim=decoder_dense_dim,
-        num_dense_layers=num_dense_layers
+        num_dense_layers=num_dense_layers,
+        loss='mse'
     )
 
     out_model = '{}_model.h5'.format(output_prefix)

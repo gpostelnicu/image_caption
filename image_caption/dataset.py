@@ -31,10 +31,8 @@ class Flickr8kDataset(object):
 
 
 class Flickr8kEncodedSequence(Sequence):
-    def __init__(self, flickr_dataset, batch_size, encodings_path, tokenizer, max_length=None, num_image_versions=5):
-        """
-        output_type can be 'word' or 'sequence'
-        """
+    def __init__(self, flickr_dataset, batch_size, encodings_path,
+                 tokenizer, max_length=None, num_image_versions=5):
         self.batch_size = batch_size
         self.ds = flickr_dataset
         self.encodings = pickle.load(open(encodings_path, 'rb'))
@@ -85,9 +83,9 @@ class Flickr8kEncodedSequence(Sequence):
         return encoding
 
 
-
 class Flickr8kNextWordSequence(Sequence):
-    def __init__(self, flickr_dataset, batch_size, encodings_path, tokenizer, max_length, num_image_versions):
+    def __init__(self, flickr_dataset, batch_size, encodings_path, tokenizer, max_length, num_image_versions,
+                 word_embeddings=None):
         """
         output_type can be 'word' or 'sequence'
         """
@@ -98,6 +96,7 @@ class Flickr8kNextWordSequence(Sequence):
         self.max_vocab_size = 1 + len(self.tok.index_word)
         self.max_length = max_length
         self.num_image_versions = num_image_versions
+        self.word_embeddings = word_embeddings
 
         self.ds_prev, self.ds_imid, self.ds_next = self._split_captions()
 
@@ -119,7 +118,10 @@ class Flickr8kNextWordSequence(Sequence):
         partial_captions = [self.ds_prev[i] for i in batch_idx]
         partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
 
-        out = to_categorical([self.ds_next[i] for i in batch_idx], num_classes=self.max_vocab_size)
+        if self.word_embeddings:
+            out = [self._target_fasttext(self.ds_next[i]) for i in batch_idx]
+        else:
+            out = to_categorical([self.ds_next[i] for i in batch_idx], num_classes=self.max_vocab_size)
         return [[images, partial_captions], out]
 
     def _split_captions(self):
@@ -143,6 +145,11 @@ class Flickr8kNextWordSequence(Sequence):
         full_id = '{}-{}'.format(imid, i)
         encoding = self.encodings[full_id]
         return encoding
+
+    def _target_fasttext(self, word):
+        if word in self.word_embeddings:
+            return self.word_embeddings
+        return self.word_embeddings['is']
 
 
 class Flickr8KSequence(Sequence):
