@@ -149,7 +149,7 @@ class Flickr8kNextWordSequence(Sequence):
     def _target_fasttext(self, word):
         if word in self.word_embeddings:
             return self.word_embeddings
-        return self.word_embeddings['is']
+        return self.word_embeddings[1]
 
 
 class Flickr8KSequence(Sequence):
