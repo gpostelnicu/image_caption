@@ -7,12 +7,14 @@ from keras.optimizers import Adam
 
 class EncoderDecoderModel(object):
     def __init__(self, img_encoding_shape, max_caption_len, vocab_size,
-                 embedding_dim, lstm_units, img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
+                 embedding_dim, text_embedding_matrix, lstm_units,
+                 img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
                  dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1):
         self.img_encoding_shape = img_encoding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
         self.embedding_dim = embedding_dim
+        self.text_embedding_matrix = text_embedding_matrix
         self.img_dense_dim = img_dense_dim
         self.lstm_units = lstm_units
         self.decoder_dense_dim = decoder_dense_dim
@@ -30,8 +32,8 @@ class EncoderDecoderModel(object):
         full_image = BatchNormalization()(full_image)
 
         text_input = Input(shape=(self.max_caption_len,), name='text_input')
-        full_text = Embedding(self.vocab_size, self.embedding_dim,
-                              input_length=self.max_caption_len, mask_zero=True)(text_input)
+        full_text = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
+                              input_length=self.max_caption_len, mask_zero=True, trainable=False)(text_input)
         full_text = LSTM(self.lstm_units, name='text_feature',
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(full_text)
         full_text = BatchNormalization()(full_text)

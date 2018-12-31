@@ -68,11 +68,15 @@ def train2(
         tok, train_flkr.max_length, num_image_versions
     )
 
+    embeddings = load_fasttext(embeddings_path)
+    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim)
+
     model = EncoderDecoderModel(
         img_encoding_shape=(512,),
         max_caption_len=train_flkr.max_length,
         vocab_size=1 + len(tok.index_word),
         embedding_dim=embedding_dim,
+        text_embedding_matrix=embedding_matrix,
         lstm_units=lstm_units,
         img_dense_dim=img_dense_dim,
         learning_rate=learning_rate,
