@@ -1,6 +1,6 @@
 from keras import Model
 from keras.layers import concatenate, Input, Dense, RepeatVector, Embedding, BatchNormalization, Bidirectional, LSTM, \
-    TimeDistributed, Add
+    TimeDistributed, Add, Concatenate, Multiply
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
@@ -36,7 +36,8 @@ class EncoderDecoderModel(object):
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(full_text)
         full_text = BatchNormalization()(full_text)
 
-        encoded = Add()([full_text, full_image])
+        # encoded = Add()([full_text, full_image])
+        encoded = Multiply()([full_text, full_image])
 
         decoder = encoded
         for _ in range(self.num_dense_layers):
