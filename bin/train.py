@@ -19,7 +19,8 @@ from image_caption import Flickr8KSequence, SimpleModel
 from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence
 from image_caption.image_encoder import ImageEncoder
 from image_caption.models import EncoderDecoderModel
-from image_caption.utils import setup_logging
+from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix
+
 
 def train2(
     train_image_encodings_path,
@@ -102,55 +103,70 @@ def train(train_image_encodings_path,
           training_captions_path,
           test_image_encodings_path,
           test_captions_path,
-          output_path,
+          embeddings_path,
+          output_prefix,
           num_epochs,
-          embedding_dim=256,
+          embedding_dim=300,
           img_dense_dim=128,
           lstm_units=128,
           batch_size=64,
-          learning_rate=1e-5
+          learning_rate=1e-5,
+          num_image_versions=5,
           ):
     setup_logging()
 
-    logging.info("Loading Flickr8K dataset.")
-    train_flkr = Flickr8KSequence(batch_size,
-                                  encodings_path=train_image_encodings_path,
-                                  captions_path=training_captions_path)
-    logging.info("Loaded dataset. Number of samples: {}, number of steps: {}".format(
+    logging.info("Loading Flickr8K train dataset.")
+    train_flkr = Flickr8kDataset(captions_path=training_captions_path)
+    logging.info("Loaded train dataset. Number of samples: {}, number of steps: {}".format(
         len(train_flkr.captions), len(train_flkr)
     ))
-    test_flkr = Flickr8KSequence(
-        batch_size,
-        encodings_path=test_image_encodings_path,
-        captions_path=test_captions_path,
-        max_length=train_flkr.max_length,
-        index_word=train_flkr.index_word
-    )
+    test_flkr = Flickr8kDataset(captions_path=test_captions_path)
     logging.info("Loaded test dataset. Number of samples: {}, number of steps: {}".format(
         len(test_flkr.captions), len(test_flkr)
     ))
 
+    tok = Tokenizer()
+    tok.fit_on_texts(train_flkr.captions)
+    tok.fit_on_texts(test_flkr.captions)
+    output_path = '{}_tok.pkl'.format(output_prefix)
+    logging.info('Writing tokenizer file to file {}'.format(output_path))
+    pickle.dump(tok, open(output_path, 'wb'))
+
+    train_seq = Flickr8kEncodedSequence(
+        train_flkr, batch_size, train_image_encodings_path,
+        tok, train_flkr.max_length, num_image_versions
+    )
+    test_seq = Flickr8kNextWordSequence(
+        test_flkr, batch_size, test_image_encodings_path,
+        tok, train_flkr.max_length, num_image_versions
+    )
+
+    embeddings = load_fasttext(embeddings_path)
+    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim)
 
     model = SimpleModel(
+        text_embedding_matrix=embedding_matrix,
         img_embedding_shape=(512,),
         max_caption_len=train_flkr.max_length,
-        vocab_size=train_flkr.max_vocab_index,
+        vocab_size=1 + len(tok.index_word),
         embedding_dim=embedding_dim,
+        text_embedding_trainable=False,
         img_dense_dim=img_dense_dim,
         lstm_units=lstm_units,
         learning_rate=learning_rate
     )
 
+    out_model = '{}_model.h5'.format(output_prefix)
     callbacks = [
-        ModelCheckpoint(output_path, save_best_only=True),
+        ModelCheckpoint(out_model, save_best_only=True),
         EarlyStopping(patience=10),
         TensorBoard()
     ]
     model.keras_model.fit_generator(
-        train_flkr,
-        steps_per_epoch=len(train_flkr),
-        validation_data=test_flkr,
-        validation_steps=len(test_flkr),
+        train_seq,
+        steps_per_epoch=len(train_seq),
+        validation_data=test_seq,
+        validation_steps=len(test_seq),
         epochs=num_epochs,
         verbose=1,
         callbacks=callbacks
@@ -176,7 +192,10 @@ def encode_images(image_ids_path, im_dir, output_encodings, num_image_transforms
         pickle.dump(im_encodings, fh)
 
 
-def inference(im_path, model_path, tok_path, max_cap_len=39):
+def inference2(im_path, model_path, tok_path, max_cap_len=39):
+    """
+    Perform inference using a model trained by word, as opposed to LSTM.
+    """
     tok = pickle.load(open(tok_path, 'rb'))
     model = load_model(model_path)
     encoder = ImageEncoder(random_transform=False)

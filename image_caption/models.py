@@ -33,14 +33,10 @@ class EncoderDecoderModel(object):
         full_text = Embedding(self.vocab_size, self.embedding_dim,
                               input_length=self.max_caption_len, mask_zero=True)(text_input)
         full_text = LSTM(self.lstm_units, name='text_feature',
-                         dropout=self.dropout, recurrent_dropout=self.recurrent_dropout,
-                         return_sequences=True)(full_text)
-        full_text = LSTM(self.lstm_units, name='text_feature_2',
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(full_text)
         full_text = BatchNormalization()(full_text)
 
-        # encoded = Add()([full_text, full_image])
-        encoded = Multiply()([full_text, full_image])
+        encoded = Add()([full_text, full_image])
 
         decoder = encoded
         for _ in range(self.num_dense_layers):
@@ -55,11 +51,14 @@ class EncoderDecoderModel(object):
 
 class SimpleModel(object):
     def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
-                 embedding_dim, img_dense_dim, lstm_units, learning_rate):
+                 text_embedding_matrix, embedding_dim, text_embedding_trainable,
+                 img_dense_dim, lstm_units, learning_rate):
         self.img_embedding_shape = img_embedding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
+        self.text_embedding_matrix = text_embedding_matrix
         self.embedding_dim = embedding_dim
+        self.text_embedding_trainable = text_embedding_trainable
         self.img_dense_dim = img_dense_dim
         self.lstm_units = lstm_units
         self.learning_rate = learning_rate
@@ -89,8 +88,8 @@ class SimpleModel(object):
 
     def _word_model(self):
         word_input = Input(shape=(self.max_caption_len,))
-        embedding = Embedding(self.vocab_size, self.embedding_dim,
-                              input_length=self.max_caption_len)(word_input)
+        embedding = Embedding(self.vocab_size, self.embedding_dim, weights=self.text_embedding_matrix,
+                              input_length=self.max_caption_len, trainable=self.text_embedding_trainable)(word_input)
         return word_input, embedding
 
     def _build_seq_output(self, sequence_input):
