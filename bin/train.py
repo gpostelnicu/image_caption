@@ -85,7 +85,7 @@ def train2(
         recurrent_dropout=recurrent_dropout,
         decoder_dense_dim=decoder_dense_dim,
         num_dense_layers=num_dense_layers,
-        loss='mse'
+        loss='mae'
     )
 
     out_model = '{}_model.h5'.format(output_prefix)
@@ -207,7 +207,7 @@ def inference2(im_path, model_path, tok_path, max_cap_len=39):
     encoder = ImageEncoder(random_transform=False)
     im_encoding = encoder.process(im_path)
 
-    def encode_partial_cap(partial_cap, im, ds):
+    def encode_partial_cap(partial_cap, im):
         input_text = [[tok.word_index[w] for w in partial_cap if w in tok.word_index]]
         input_text = pad_sequences(input_text, maxlen=max_cap_len, padding='post')
         im = np.array([im])

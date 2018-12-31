@@ -147,7 +147,7 @@ class Flickr8kNextWordSequence(Sequence):
         return encoding
 
     def _target_fasttext(self, word_id):
-        if word_id in self.word_embeddings:
+        if word_id < self.word_embeddings.shape[0]:
             return self.word_embeddings[word_id]
         return self.word_embeddings[1]
 
