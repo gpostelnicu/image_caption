@@ -33,7 +33,7 @@ def create_embedding_matrix(index, embeddings, dim, init_random=False):
     num_random = 0
 
     matrix[0] = np.zeros((dim,))
-    for word, i in tqdm(index.items()):
+    for word, i in index.items():
         if i < 0:  # remove punctuation.
             continue
         vec = embeddings.get(word)
