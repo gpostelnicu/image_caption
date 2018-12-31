@@ -39,6 +39,7 @@ def train2(
     dropout=0.1,
     recurrent_dropout=0.1,
     decoder_dense_dim=256,
+    loss='mse',
     num_dense_layers=1):
     setup_logging()
 
@@ -85,7 +86,7 @@ def train2(
         recurrent_dropout=recurrent_dropout,
         decoder_dense_dim=decoder_dense_dim,
         num_dense_layers=num_dense_layers,
-        loss='mae'
+        loss=loss
     )
 
     out_model = '{}_model.h5'.format(output_prefix)
