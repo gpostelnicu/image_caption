@@ -118,7 +118,7 @@ class Flickr8kNextWordSequence(Sequence):
         partial_captions = [self.ds_prev[i] for i in batch_idx]
         partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
 
-        if self.word_embeddings:
+        if self.word_embeddings is not None:
             out = [self._target_fasttext(self.ds_next[i]) for i in batch_idx]
         else:
             out = to_categorical([self.ds_next[i] for i in batch_idx], num_classes=self.max_vocab_size)
