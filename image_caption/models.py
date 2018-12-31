@@ -35,7 +35,7 @@ class EncoderDecoderModel(object):
         full_text = LSTM(self.lstm_units, name='text_feature',
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout,
                          return_sequences=True)(full_text)
-        full_text = LSTM(self.lstm_units, name='text_feature',
+        full_text = LSTM(self.lstm_units, name='text_feature_2',
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(full_text)
         full_text = BatchNormalization()(full_text)
 
