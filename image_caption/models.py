@@ -73,7 +73,7 @@ class Word2VecNextWordModel(OneHotNextWordModel):
                          loss, optimizer)
 
     def _build_final_layer(self, decoded):
-        return Dense(self.embedding_dim, activation='tanh')
+        return Dense(self.embedding_dim, activation='tanh')(decoded)
 
 
 class EncoderDecoderModel(object):
