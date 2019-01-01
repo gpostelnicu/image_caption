@@ -36,7 +36,7 @@ class OneHotNextWordModel(object):
 
         text_input = Input(shape=(self.max_caption_len,), name='text_input')
         full_text = Embedding(self.vocab_size, self.embedding_dim, weights=self.text_embedding_matrix,
-                              input_length=self.max_caption_len, mask_zero=True)(text_input)
+                              input_length=self.max_caption_len, mask_zero=True, trainable=False)(text_input)
         full_text = LSTM(self.lstm_units, name='text_feature',
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout,
                          return_sequences=True)(full_text)
@@ -44,7 +44,7 @@ class OneHotNextWordModel(object):
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(full_text)
         full_text = BatchNormalization()(full_text)
 
-        encoded = Multiply()([full_text, full_image])
+        encoded = Concatenate()([full_text, full_image])
 
         decoder = encoded
         for _ in range(self.num_dense_layers):
