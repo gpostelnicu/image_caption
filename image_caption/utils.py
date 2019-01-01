@@ -21,33 +21,38 @@ def load_fasttext(embeddings_path):
     return embeddings_index
 
 
-def create_embedding_matrix(index, embeddings, dim, init_random=False):
+def create_embedding_matrix(index, embeddings, dim, special_tokens, init_random=False):
+    vec_dim = dim + len(special_tokens)
     if init_random:
         print('Embedding random initializer.')
-        matrix = np.random.random((max(index.values()) + 1, dim))
+        matrix = np.random.random((max(index.values()) + 1, vec_dim))
     else:
         print('Embedding zeros initializer.')
-        matrix = np.zeros((max(index.values()) + 1, dim))
+        matrix = np.zeros((max(index.values()) + 1, vec_dim))
     num_words_in_embedding = 0
     num_lowercase = 0
     num_random = 0
 
-    matrix[0] = np.zeros((dim,))
+    matrix[0] = np.zeros((vec_dim,))
+    padding = np.zeros((len(special_tokens,)))
     for word, i in index.items():
         if i < 0:  # remove punctuation.
             continue
         vec = embeddings.get(word)
         if vec is not None:
             num_words_in_embedding += 1
-            matrix[i] = vec
+            matrix[i] = np.concatenate((vec, padding))
         elif word.lower() in embeddings:
             num_lowercase += 1
             vec = embeddings.get(word.lower())
-            matrix[i] = vec
+            matrix[i] = np.concatenate((vec, padding))
+        elif word in special_tokens:
+            vec = np.zeros((vec_dim,))
+            vec[dim + special_tokens.index(word)] = 1.
         else:
             prime1 = 197
             prime2 = 97
-            v = np.zeros((dim,))
+            v = np.zeros((vec_dim,))
             v[i % prime1] = 1.
             v[i % prime2 + prime1] = -1.
             matrix[i] = v

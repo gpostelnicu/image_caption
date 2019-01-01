@@ -18,11 +18,11 @@ from keras.preprocessing.text import Tokenizer
 from image_caption import Flickr8KSequence, SimpleModel
 from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence
 from image_caption.image_encoder import ImageEncoder
-from image_caption.models import EncoderDecoderModel
+from image_caption.models import EncoderDecoderModel, Word2VecNextWordModel
 from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix
 
 
-def train2(
+def train_out_w2v(
     train_image_encodings_path,
     training_captions_path,
     test_image_encodings_path,
@@ -62,7 +62,8 @@ def train2(
     pickle.dump(tok, open(output_path, 'wb'))
 
     embeddings = load_fasttext(embeddings_path)
-    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim)
+    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
+                                               special_tokens=['starttoken', 'endtoken'])
 
     train_seq = Flickr8kNextWordSequence(
         train_flkr, batch_size, train_image_encodings_path,
@@ -73,7 +74,7 @@ def train2(
         tok, train_flkr.max_length, num_image_versions, embedding_matrix
     )
 
-    model = EncoderDecoderModel(
+    model = Word2VecNextWordModel(
         img_encoding_shape=(512,),
         max_caption_len=train_flkr.max_length,
         vocab_size=1 + len(tok.index_word),

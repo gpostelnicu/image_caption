@@ -5,6 +5,77 @@ from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
 
+class OneHotNextWordModel(object):
+    def __init__(self, img_encoding_shape, max_caption_len, vocab_size,
+                 embedding_dim, text_embedding_matrix, lstm_units,
+                 img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
+                 dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1,
+                 loss='categorical_crossentropy', optimizer='adam'):
+        self.img_encoding_shape = img_encoding_shape
+        self.max_caption_len = max_caption_len
+        self.vocab_size = vocab_size
+        self.embedding_dim = embedding_dim
+        self.text_embedding_matrix = text_embedding_matrix
+        self.img_dense_dim = img_dense_dim
+        self.lstm_units = lstm_units
+        self.decoder_dense_dim = decoder_dense_dim
+        self.learning_rate = learning_rate
+        self.dropout = dropout
+        self.recurrent_dropout = recurrent_dropout
+        self.num_dense_layers = num_dense_layers
+        self.loss = loss
+        self.optimizer = optimizer
+
+        self.keras_model = self._build_model()
+        self.keras_model.summary()
+
+    def _build_model(self):
+        image_input = Input(shape=self.img_encoding_shape, name='image_input')
+        full_image = Dense(self.lstm_units, activation='relu', name='image_feature')(image_input)
+        full_image = BatchNormalization()(full_image)
+
+        text_input = Input(shape=(self.max_caption_len,), name='text_input')
+        full_text = Embedding(self.vocab_size, self.embedding_dim,
+                              input_length=self.max_caption_len, mask_zero=True)(text_input)
+        full_text = LSTM(self.lstm_units, name='text_feature',
+                         dropout=self.dropout, recurrent_dropout=self.recurrent_dropout,
+                         return_sequences=True)(full_text)
+        full_text = LSTM(self.lstm_units, name='text_feature_2',
+                         dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(full_text)
+        full_text = BatchNormalization()(full_text)
+
+        encoded = Multiply()([full_text, full_image])
+
+        decoder = encoded
+        for _ in range(self.num_dense_layers):
+            decoder = Dense(self.decoder_dense_dim, activation='relu')(decoder)
+        output = self._build_final_layer(decoder)
+
+        model = Model(inputs=[image_input, text_input], outputs=output)
+        model.compile(loss=self.loss, optimizer=self.optimizer)
+
+        return model
+
+    def _build_final_layer(self, decoded):
+        return Dense(self.vocab_size, activation='softmax')(decoded)
+
+
+class Word2VecNextWordModel(OneHotNextWordModel):
+    def __init__(self, img_encoding_shape, max_caption_len, vocab_size,
+                 embedding_dim, text_embedding_matrix, lstm_units,
+                 img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
+                 dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1,
+                 loss='cosine', optimizer='adam'):
+        super().__init__(img_encoding_shape, max_caption_len, vocab_size,
+                         embedding_dim, text_embedding_matrix, lstm_units,
+                         img_dense_dim, decoder_dense_dim, learning_rate,
+                         dropout, recurrent_dropout, num_dense_layers,
+                         loss, optimizer)
+
+    def _build_final_layer(self, decoded):
+        return Dense(self.embedding_dim, activation='tanh')
+
+
 class EncoderDecoderModel(object):
     def __init__(self, img_encoding_shape, max_caption_len, vocab_size,
                  embedding_dim, text_embedding_matrix, lstm_units,

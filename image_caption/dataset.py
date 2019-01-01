@@ -97,6 +97,8 @@ class Flickr8kNextWordSequence(Sequence):
         self.max_length = max_length
         self.num_image_versions = num_image_versions
         self.word_embeddings = word_embeddings
+        if self.word_embeddings is not None:
+            logging.info("Will output word embeddings.")
 
         self.ds_prev, self.ds_imid, self.ds_next = self._split_captions()
 
