@@ -40,7 +40,8 @@ def train_out_onehot(
     recurrent_dropout=0.1,
     decoder_dense_dim=256,
     loss='categorical_crossentropy',
-    num_dense_layers=1):
+    num_dense_layers=1,
+    num_lstm_layers=1):
     setup_logging()
 
     logging.info("Loading Flickr8K train dataset.")
@@ -86,7 +87,7 @@ def train_out_onehot(
         dropout=dropout,
         recurrent_dropout=recurrent_dropout,
         decoder_dense_dim=decoder_dense_dim,
-        num_dense_layers=num_dense_layers,
+        num_dense_layers=num_dense_layers, num_lstm_layers=num_lstm_layers,
         loss=loss
     )
 

@@ -46,7 +46,7 @@ PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train_out_onehot --training-cap
 * To perform inference:
 
 ```bash
-PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py inference2 --im-path data/flickr8k/dataset/Flickr8k_Dataset/2610447973_89227ff978.jpg  --model-path data/gen3/onehot_model.h5 --tok-path data/gen3/onehot-tok.pkl
+BASE=oh_merge; PYTHONPATH=`pwd`:$PYTHONPATH  python bin/train.py inference2 --im-path data/flickr8k/dataset/Flickr8k_Dataset/2610447973_89227ff978.jpg  --model-path data/gen3/${BASE}_model.h5 --tok-path data/gen3/${BASE}-tok.pkl
 ```
 
 which yields: "a woman in a blue shirt is walking down a sidewalk".
