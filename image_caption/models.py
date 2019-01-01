@@ -41,7 +41,7 @@ class OneHotNextWordModel(object):
         for i in range(self.num_lstm_layers):
             full_text = LSTM(self.lstm_units, name='text_feature_{}'.format(i),
                              dropout=self.dropout, recurrent_dropout=self.recurrent_dropout,
-                             return_sequences=(i + 1 == self.num_lstm_layers))(full_text)
+                             return_sequences=(i + 1 < self.num_lstm_layers))(full_text)
         full_text = BatchNormalization()(full_text)
 
         encoded = Concatenate()([full_text, full_image])
