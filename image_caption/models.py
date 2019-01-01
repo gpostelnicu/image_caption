@@ -35,7 +35,7 @@ class OneHotNextWordModel(object):
         full_image = BatchNormalization()(full_image)
 
         text_input = Input(shape=(self.max_caption_len,), name='text_input')
-        full_text = Embedding(self.vocab_size, self.embedding_dim,
+        full_text = Embedding(self.vocab_size, self.embedding_dim, weights=self.text_embedding_matrix,
                               input_length=self.max_caption_len, mask_zero=True)(text_input)
         full_text = LSTM(self.lstm_units, name='text_feature',
                          dropout=self.dropout, recurrent_dropout=self.recurrent_dropout,

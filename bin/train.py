@@ -54,6 +54,7 @@ def train_out_onehot(
     ))
 
     # Generate tokenizer
+    logging.info("Fitting tokenizer.")
     tok = Tokenizer()
     tok.fit_on_texts(train_flkr.captions)
     tok.fit_on_texts(test_flkr.captions)
