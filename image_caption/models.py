@@ -10,7 +10,7 @@ class OneHotNextWordModel(object):
                  embedding_dim, text_embedding_matrix, lstm_units,
                  img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
                  dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1,
-                 loss='categorical_crossentropy', optimizer='adam'):
+                 loss='categorical_crossentropy'):
         self.img_encoding_shape = img_encoding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -24,7 +24,7 @@ class OneHotNextWordModel(object):
         self.recurrent_dropout = recurrent_dropout
         self.num_dense_layers = num_dense_layers
         self.loss = loss
-        self.optimizer = optimizer
+        self.optimizer = Adam(lr=self.learning_rate, clipnorm=1.0)
 
         self.keras_model = self._build_model()
         self.keras_model.summary()

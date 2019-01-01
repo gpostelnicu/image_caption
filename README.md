@@ -39,10 +39,14 @@ PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py encode-text --image-captions-pa
 PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train_out_w2v --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen2/out19 --batch-size 1024 --learning-rate 1e-5 --lstm-units 128 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --num-dense-layers 2 --embeddings-path data/fasttext/crawl-300d-2M.vec
 ```
 
+```bash
+PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train_out_onehot --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen2/out_onehot --batch-size 1024 --learning-rate 1e-5 --lstm-units 128 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --num-dense-layers 2 --embeddings-path data/fasttext/crawl-300d-2M.vec
+```
+
 * To perform inference:
 
 ```bash
-PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py inference --im-path data/flickr8k/dataset/Flickr8k_Dataset/191003283_992257f835.jpg  --model-path data/gen2/model1_model.h5 --tok-path data/gen2/model1-tok.pkl
+PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py inference --im-path data/flickr8k/dataset/Flickr8k_Dataset/191003283_992257f835.jpg  --model-path data/gen2/out19_onehot_model.h5 --tok-path data/gen2/out19_onehot-tok.pkl
 ```
 
 which yields: "a woman in a blue shirt is walking down a sidewalk".

@@ -304,7 +304,7 @@ def inference2(im_path, model_path, tok_path, max_cap_len=39):
     EOS_TOKEN = 'endtoken'
 
     while True:
-        inputs = encode_partial_cap(partial_cap, im_encoding, tok)
+        inputs = encode_partial_cap(partial_cap, im_encoding)
         preds = model.predict(inputs)
         next_idx = np.argmax(preds, axis=-1)[0]
         next_word = tok.index_word[next_idx]
