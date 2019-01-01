@@ -18,8 +18,92 @@ from keras.preprocessing.text import Tokenizer
 from image_caption import Flickr8KSequence, SimpleModel
 from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence
 from image_caption.image_encoder import ImageEncoder
-from image_caption.models import EncoderDecoderModel, Word2VecNextWordModel
+from image_caption.models import EncoderDecoderModel, Word2VecNextWordModel, OneHotNextWordModel
 from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix
+
+
+def train_out_onehot(
+    train_image_encodings_path,
+    training_captions_path,
+    test_image_encodings_path,
+    test_captions_path,
+    embeddings_path,
+    output_prefix,
+    num_epochs,
+    embedding_dim=300,
+    img_dense_dim=128,
+    lstm_units=128,
+    batch_size=64,
+    num_image_versions=5,
+    learning_rate=1e-5,
+    dropout=0.1,
+    recurrent_dropout=0.1,
+    decoder_dense_dim=256,
+    loss='categorical_crossentropy',
+    num_dense_layers=1):
+    setup_logging()
+
+    logging.info("Loading Flickr8K train dataset.")
+    train_flkr = Flickr8kDataset(captions_path=training_captions_path)
+    logging.info("Loaded train dataset. Number of samples: {}, number of steps: {}".format(
+        len(train_flkr.captions), len(train_flkr)
+    ))
+    test_flkr = Flickr8kDataset(captions_path=test_captions_path)
+    logging.info("Loaded test dataset. Number of samples: {}, number of steps: {}".format(
+        len(test_flkr.captions), len(test_flkr)
+    ))
+
+    # Generate tokenizer
+    tok = Tokenizer()
+    tok.fit_on_texts(train_flkr.captions)
+    tok.fit_on_texts(test_flkr.captions)
+    output_path = '{}-tok.pkl'.format(output_prefix)
+    logging.info('Writing tokenizer file to file {}'.format(output_path))
+    pickle.dump(tok, open(output_path, 'wb'))
+
+    embeddings = load_fasttext(embeddings_path)
+    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim)
+
+    train_seq = Flickr8kNextWordSequence(
+        train_flkr, batch_size, train_image_encodings_path,
+        tok, train_flkr.max_length, num_image_versions
+    )
+    test_seq = Flickr8kNextWordSequence(
+        test_flkr, batch_size, test_image_encodings_path,
+        tok, train_flkr.max_length, num_image_versions
+    )
+
+    model = OneHotNextWordModel(
+        img_encoding_shape=(512,),
+        max_caption_len=train_flkr.max_length,
+        vocab_size=1 + len(tok.index_word),
+        embedding_dim=embedding_dim,
+        text_embedding_matrix=embedding_matrix,
+        lstm_units=lstm_units,
+        img_dense_dim=img_dense_dim,
+        learning_rate=learning_rate,
+        dropout=dropout,
+        recurrent_dropout=recurrent_dropout,
+        decoder_dense_dim=decoder_dense_dim,
+        num_dense_layers=num_dense_layers,
+        loss=loss
+    )
+
+    out_model = '{}_model.h5'.format(output_prefix)
+    callbacks = [
+        ModelCheckpoint(out_model, save_best_only=True),
+        EarlyStopping(patience=10),
+        TensorBoard()
+    ]
+    model.keras_model.fit_generator(
+        train_seq,
+        steps_per_epoch=len(train_seq),
+        validation_data=test_seq,
+        validation_steps=len(test_seq),
+        epochs=num_epochs,
+        verbose=1,
+        callbacks=callbacks
+    )
 
 
 def train_out_w2v(
