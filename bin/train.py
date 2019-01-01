@@ -62,7 +62,6 @@ def train_out_w2v(
     pickle.dump(tok, open(output_path, 'wb'))
 
     special_tokens = ['starttoken', 'endtoken']
-    embedding_dim += len(special_tokens)
     embeddings = load_fasttext(embeddings_path)
     embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
                                                special_tokens=special_tokens)
@@ -80,7 +79,7 @@ def train_out_w2v(
         img_encoding_shape=(512,),
         max_caption_len=train_flkr.max_length,
         vocab_size=1 + len(tok.index_word),
-        embedding_dim=embedding_dim,
+        embedding_dim=embedding_dim + len(special_tokens),
         text_embedding_matrix=embedding_matrix,
         lstm_units=lstm_units,
         img_dense_dim=img_dense_dim,
