@@ -61,9 +61,11 @@ def train_out_w2v(
     logging.info('Writing tokenizer file to file {}'.format(output_path))
     pickle.dump(tok, open(output_path, 'wb'))
 
+    special_tokens = ['starttoken', 'endtoken']
+    embedding_dim += len(special_tokens)
     embeddings = load_fasttext(embeddings_path)
     embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
-                                               special_tokens=['starttoken', 'endtoken'])
+                                               special_tokens=special_tokens)
 
     train_seq = Flickr8kNextWordSequence(
         train_flkr, batch_size, train_image_encodings_path,
