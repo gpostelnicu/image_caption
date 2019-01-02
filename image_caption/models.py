@@ -126,7 +126,8 @@ class EncoderDecoderModel(object):
 class SimpleModel(object):
     def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
                  text_embedding_matrix, embedding_dim, text_embedding_trainable,
-                 img_dense_dim, lstm_units, learning_rate):
+                 img_dense_dim, lstm_units, learning_rate,
+                 dropout, recurrent_dropout):
         self.img_embedding_shape = img_embedding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -136,6 +137,8 @@ class SimpleModel(object):
         self.img_dense_dim = img_dense_dim
         self.lstm_units = lstm_units
         self.learning_rate = learning_rate
+        self.dropout = dropout
+        self.recurrent_dropout = recurrent_dropout
 
         self.keras_model = self._build_model()
 
@@ -169,7 +172,8 @@ class SimpleModel(object):
 
     def _build_seq_output(self, sequence_input):
             x = TimeDistributed(BatchNormalization(axis=-1))(sequence_input)
-            x = LSTM(units=self.lstm_units, return_sequences=True, dropout=0.1, recurrent_dropout=0.1)(x)
+            x = LSTM(units=self.lstm_units, return_sequences=True,
+                     dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
             time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
             return time_dist_dense
 
