@@ -213,13 +213,9 @@ def train(train_image_encodings_path,
 
     logging.info("Loading Flickr8K train dataset.")
     train_flkr = Flickr8kDataset(captions_path=training_captions_path)
-    logging.info("Loaded train dataset. Number of samples: {}, number of steps: {}".format(
-        len(train_flkr.captions), len(train_flkr)
-    ))
+    logging.info("Loaded train dataset. Number of samples: {}.".format(len(train_flkr.captions)))
     test_flkr = Flickr8kDataset(captions_path=test_captions_path)
-    logging.info("Loaded test dataset. Number of samples: {}, number of steps: {}".format(
-        len(test_flkr.captions), len(test_flkr)
-    ))
+    logging.info("Loaded test dataset. Number of samples: {}.".format(len(test_flkr.captions)))
 
     tok = Tokenizer()
     tok.fit_on_texts(train_flkr.captions)
@@ -232,10 +228,12 @@ def train(train_image_encodings_path,
         train_flkr, batch_size, train_image_encodings_path,
         tok, train_flkr.max_length, num_image_versions
     )
+    logging.info("Number of train steps: {}".format(len(train_seq)))
     test_seq = Flickr8kEncodedSequence(
         test_flkr, batch_size, test_image_encodings_path,
         tok, train_flkr.max_length, num_image_versions
     )
+    logging.info("Number of test steps: {}.".format(len(test_seq)))
 
     special_tokens = ['starttoken', 'endtoken']
     embeddings = load_fasttext(embeddings_path)
