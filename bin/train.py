@@ -232,7 +232,7 @@ def train(train_image_encodings_path,
         train_flkr, batch_size, train_image_encodings_path,
         tok, train_flkr.max_length, num_image_versions
     )
-    test_seq = Flickr8kNextWordSequence(
+    test_seq = Flickr8kEncodedSequence(
         test_flkr, batch_size, test_image_encodings_path,
         tok, train_flkr.max_length, num_image_versions
     )
