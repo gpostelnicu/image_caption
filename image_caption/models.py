@@ -162,7 +162,7 @@ class SimpleModel(object):
 
     def _word_model(self):
         word_input = Input(shape=(self.max_caption_len,))
-        embedding = Embedding(self.vocab_size, self.embedding_dim, weights=self.text_embedding_matrix,
+        embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
                               input_length=self.max_caption_len, trainable=self.text_embedding_trainable,
                               mask_zero=True)(word_input)
         return word_input, embedding
