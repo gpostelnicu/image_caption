@@ -63,7 +63,7 @@ class Flickr8kEncodedSequence(Sequence):
 
         outputs = []
         for caption in captions:
-            pred = np.zeros((self.max_length, self.max_vocab_index))
+            pred = np.zeros((self.max_length, self.max_vocab_size))
             for i, n in enumerate(caption[1:]):
                 pred[i, n] = 1.
 
