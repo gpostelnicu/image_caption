@@ -38,7 +38,7 @@ PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py encode-text --image-captions-pa
 ** for full LSTM prediction:
 
 ```bash
-PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen3/full --batch-size 1024 --learning-rate 1e-5 --lstm-units 128 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --embeddings-path data/fasttext/crawl-300d-2M.vec
+PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen3/full --batch-size 128 --learning-rate 1e-4 --lstm-units 512 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --embeddings-path data/fasttext/crawl-300d-2M.vec
 ```
 
 ```bash

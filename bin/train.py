@@ -207,7 +207,9 @@ def train(train_image_encodings_path,
           batch_size=64,
           learning_rate=1e-5,
           num_image_versions=5,
-          text_embedding_trainable=False
+          text_embedding_trainable=False,
+          dropout=0.0,
+          recurrent_dropout=0.0
           ):
     setup_logging()
 
@@ -249,7 +251,9 @@ def train(train_image_encodings_path,
         text_embedding_trainable=text_embedding_trainable,
         img_dense_dim=img_dense_dim,
         lstm_units=lstm_units,
-        learning_rate=learning_rate
+        learning_rate=learning_rate,
+        dropout=dropout,
+        recurrent_dropout=recurrent_dropout
     )
 
     out_model = '{}_model.h5'.format(output_prefix)
@@ -288,7 +292,35 @@ def encode_images(image_ids_path, im_dir, output_encodings, num_image_transforms
         pickle.dump(im_encodings, fh)
 
 
-def inference2(im_path, model_path, tok_path, max_cap_len=39):
+def inference_lstm(im_path, model_path, tok_path, max_cap_len=39):
+    """
+    Perform inference using a model trained to predict LSTM.
+    """
+    tok = pickle.load(open(tok_path, 'rb'))
+    model = load_model(model_path)
+    encoder = ImageEncoder(random_transform=False)
+    im_encoding = encoder.process(im_path)
+
+    def encode_partial_cap(partial_cap, im):
+        input_text = [[tok.word_index[w] for w in partial_cap if w in tok.word_index]]
+        input_text = pad_sequences(input_text, maxlen=max_cap_len, padding='post')
+        im = np.array([im])
+        return [im, input_text]
+
+    partial_cap = ['starttoken']
+    EOS_TOKEN = 'endtoken'
+
+    while True:
+        inputs = encode_partial_cap(partial_cap, im_encoding)
+        preds = model.predict(inputs)[0, len(partial_cap), :]
+        next_idx = np.argmax(preds, axis=-1)
+        next_word = tok.index_word[next_idx]
+        if next_word == EOS_TOKEN or len(partial_cap) == 39:
+            break
+        partial_cap.append(next_word)
+
+
+def inference_word(im_path, model_path, tok_path, max_cap_len=39):
     """
     Perform inference using a model trained by word, as opposed to LSTM.
     """
