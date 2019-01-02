@@ -53,27 +53,16 @@ class Flickr8kEncodedSequence(Sequence):
     def __getitem__(self, item):
         batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
 
-        partial_captions = []
-        outputs = []
-        images = []
-
-        for idx in batch_idx:
-            crt_img = self._get_image_encoding(self.ds.image_ids[idx])
-            seq_caption = self.tok.texts_to_sequences(self.ds.captions[idx])
-
-            partial_captions.append(seq_caption[:-1])
-            pred = np.zeros(((self.max_length, self.max_vocab_size)))
-            for i in range(len(seq_caption) - 1):
-                pred[i, seq_caption[i + 1]] = 1
-
-            outputs.append(pred)
-            images.append(crt_img)
-
-        outputs = np.asarray(outputs)
-        partial_captions = sequence.pad_sequences(
-            partial_captions,
-            maxlen=self.max_length, padding='post')
+        images = [self._get_image_encoding(self.ds_imid[i]) for i in batch_idx]
         images = np.asarray(images)
+
+        captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
+
+        partial_captions = [c[:-1] for c in captions]
+        partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
+
+        outputs = [to_categorical([c[1:] for c in captions])]
+
         return [[images, partial_captions], outputs]
 
     def _get_image_encoding(self, imid):
