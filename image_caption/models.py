@@ -161,7 +161,7 @@ class SimpleModel(object):
         return image_input, tx
 
     def _word_model(self):
-        word_input = Input(shape=(self.max_caption_len,), name='text_input')
+        word_input = Input(shape=(self.max_caption_len, 1), dtype='int32', name='text_input')
         embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
                               input_length=self.max_caption_len, trainable=self.text_embedding_trainable,
                               mask_zero=True)(word_input)
