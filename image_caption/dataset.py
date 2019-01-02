@@ -53,7 +53,7 @@ class Flickr8kEncodedSequence(Sequence):
     def __getitem__(self, item):
         batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
 
-        images = [self._get_image_encoding(self.ds_imid[i]) for i in batch_idx]
+        images = [self._get_image_encoding(self.ds.image_ids[i]) for i in batch_idx]
         images = np.asarray(images)
 
         captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
