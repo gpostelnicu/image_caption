@@ -45,7 +45,7 @@ class Flickr8kEncodedSequence(Sequence):
         self.idx = list(range(len(self.ds)))
 
     def __len__(self):
-        return len(self.ds)
+        return len(self.ds) // self.batch_size
 
     def on_epoch_end(self):
         random.shuffle(self.idx)

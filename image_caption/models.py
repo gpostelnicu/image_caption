@@ -155,13 +155,13 @@ class SimpleModel(object):
         return model
 
     def _image_model(self):
-        image_input = Input(shape=self.img_embedding_shape)
+        image_input = Input(shape=self.img_embedding_shape, name='image_input')
         x = Dense(self.img_dense_dim, activation='relu')(image_input)
         tx = RepeatVector(self.max_caption_len)(x)
         return image_input, tx
 
     def _word_model(self):
-        word_input = Input(shape=(self.max_caption_len,))
+        word_input = Input(shape=(self.max_caption_len,), name='text_input')
         embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
                               input_length=self.max_caption_len, trainable=self.text_embedding_trainable,
                               mask_zero=True)(word_input)

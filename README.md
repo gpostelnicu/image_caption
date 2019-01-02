@@ -35,12 +35,18 @@ PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py encode-text --image-captions-pa
 
 * To run training:
 
+** for full LSTM prediction:
+
+```bash
+PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen3/full --batch-size 1024 --learning-rate 1e-5 --lstm-units 128 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --embeddings-path data/fasttext/crawl-300d-2M.vec
+```
+
 ```bash
 PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train_out_w2v --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen2/out19 --batch-size 1024 --learning-rate 1e-5 --lstm-units 128 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --num-dense-layers 2 --embeddings-path data/fasttext/crawl-300d-2M.vec
 ```
 
 ```bash
-PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train_out_onehot --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen2/onehot --batch-size 512 --learning-rate 1e-5 --lstm-units 128 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --num-dense-layers 1 --embeddings-path data/fasttext/crawl-300d-2M.vec
+PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train_out_onehot --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen3/oh_merge_2 --batch-size 1024 --learning-rate 1e-4 --lstm-units 256 --embedding-dim 300 --dropout.5 --recurrent-dropout .5 --num-dense-layers 2 --image-dense-dim 256 --embeddings-path data/fasttext/crawl-300d-2M.vec --num-lstm-layers 1
 ```
 
 * To perform inference:
