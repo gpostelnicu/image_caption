@@ -319,6 +319,8 @@ def inference_lstm(im_path, model_path, tok_path, max_cap_len=39):
             break
         partial_cap.append(next_word)
 
+    print(' '.join(partial_cap[1:]))  # skip starttoken.
+
 
 def inference_word(im_path, model_path, tok_path, max_cap_len=39):
     """
