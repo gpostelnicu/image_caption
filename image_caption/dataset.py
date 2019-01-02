@@ -61,7 +61,7 @@ class Flickr8kEncodedSequence(Sequence):
         partial_captions = [c[:-1] for c in captions]
         partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
 
-        outputs = [to_categorical([c[1:] for c in captions])]
+        outputs = to_categorical([c[1:] for c in captions])
 
         return [[images, partial_captions], outputs]
 
