@@ -18,6 +18,9 @@ class Flickr8kDataset(object):
     def __len__(self):
         return len(self.captions)
 
+    def __iter__(self):
+        yield from zip(self.image_ids, self.captions)
+
     @staticmethod
     def _load_captions(captions_path):
         captions = []
@@ -60,6 +63,7 @@ class Flickr8kEncodedSequence(Sequence):
 
         partial_captions = [c[:-1] for c in captions]
         partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
+        partial_captions = np.squeeze(partial_captions)
 
         outputs = []
         for caption in captions:
