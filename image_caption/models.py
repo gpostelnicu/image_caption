@@ -163,12 +163,13 @@ class SimpleModel(object):
     def _word_model(self):
         word_input = Input(shape=(self.max_caption_len,))
         embedding = Embedding(self.vocab_size, self.embedding_dim, weights=self.text_embedding_matrix,
-                              input_length=self.max_caption_len, trainable=self.text_embedding_trainable)(word_input)
+                              input_length=self.max_caption_len, trainable=self.text_embedding_trainable,
+                              mask_zero=True)(word_input)
         return word_input, embedding
 
     def _build_seq_output(self, sequence_input):
-            x = BatchNormalization(axis=-1)(sequence_input)
-            x = Bidirectional(LSTM(units=self.lstm_units, return_sequences=True, dropout=0.1, recurrent_dropout=0.1))(x)
+            x = TimeDistributed(BatchNormalization(axis=-1))(sequence_input)
+            x = LSTM(units=self.lstm_units, return_sequences=True, dropout=0.1, recurrent_dropout=0.1)(x)
             time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
             return time_dist_dense
 

@@ -207,6 +207,7 @@ def train(train_image_encodings_path,
           batch_size=64,
           learning_rate=1e-5,
           num_image_versions=5,
+          text_embedding_trainable=False
           ):
     setup_logging()
 
@@ -236,16 +237,18 @@ def train(train_image_encodings_path,
         tok, train_flkr.max_length, num_image_versions
     )
 
+    special_tokens = ['starttoken', 'endtoken']
     embeddings = load_fasttext(embeddings_path)
-    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim)
+    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
+                                               special_tokens=special_tokens)
 
     model = SimpleModel(
         text_embedding_matrix=embedding_matrix,
         img_embedding_shape=(512,),
         max_caption_len=train_flkr.max_length,
         vocab_size=1 + len(tok.index_word),
-        embedding_dim=embedding_dim,
-        text_embedding_trainable=False,
+        embedding_dim=embedding_dim + len(special_tokens),
+        text_embedding_trainable=text_embedding_trainable,
         img_dense_dim=img_dense_dim,
         lstm_units=lstm_units,
         learning_rate=learning_rate
