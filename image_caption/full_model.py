@@ -24,13 +24,14 @@ class E2eModel(object):
         self.dropout = dropout
         self.recurrent_dropout = recurrent_dropout
 
-        self.keras_model = self._build_model()
         # TODO: instrument image model to be only partially trainable.
         # VGG model with no pooling to allow localization of features.
         self.image_model = VGG16(
             weights='imagenet', include_top=False,
             input_shape=img_embedding_shape
         )
+
+        self.keras_model = self._build_model()
 
     def _build_model(self):
         img_input, img_model = self._image_model()
