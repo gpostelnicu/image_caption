@@ -290,7 +290,8 @@ def train_e2e(images_dir,
               text_embedding_trainable=False,
               dropout=0.0,
               recurrent_dropout=0.0,
-              image_layers_to_unfreeze=4
+              image_layers_to_unfreeze=4,
+              train_patience=10
               ):
     setup_logging()
 
@@ -344,7 +345,7 @@ def train_e2e(images_dir,
     out_model = '{}_model.h5'.format(output_prefix)
     callbacks = [
         ModelCheckpoint(out_model, save_best_only=True),
-        EarlyStopping(patience=10),
+        EarlyStopping(patience=train_patience),
         TensorBoard()
     ]
     model.keras_model.fit_generator(
