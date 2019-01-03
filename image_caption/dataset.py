@@ -6,6 +6,7 @@ import random
 from functools import lru_cache
 
 import numpy as np
+from keras.applications.imagenet_utils import preprocess_input
 
 from keras.preprocessing import sequence, image
 from keras.preprocessing.image import ImageDataGenerator
@@ -66,9 +67,12 @@ class Flickr8kImageSequence(Sequence):
         batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
 
         image_paths = [os.path.join(self.images_dir, self.ds.image_ids[i]) for i in batch_idx]
-        images = np.concatenate([self._read_img(ip) for ip in image_paths])
+        images = [self._read_img(ip) for ip in image_paths]
         if self.datagen is not None:
-            images = self.datagen.random_transform(images)
+            images = [self.datagen.random_transform(im) for im in images]
+        images = np.concatenate(images)
+        norm_images = preprocess_input(images)
+        norm_images = np.asarray(norm_images)
 
         captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
 
@@ -85,7 +89,7 @@ class Flickr8kImageSequence(Sequence):
             outputs.append(pred)
         outputs = np.asarray(outputs)
 
-        return [[images, partial_captions], outputs]
+        return [[norm_images, partial_captions], outputs]
 
 
     @lru_cache(maxsize=30000)
