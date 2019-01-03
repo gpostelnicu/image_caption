@@ -6,7 +6,6 @@ import random
 from functools import lru_cache
 
 import numpy as np
-from keras.applications.imagenet_utils import preprocess_input
 
 from keras.preprocessing import sequence, image
 from keras.preprocessing.image import ImageDataGenerator
@@ -39,13 +38,14 @@ class Flickr8kDataset(object):
 
 class Flickr8kImageSequence(Sequence):
     def __init__(self, flickr_dataset, images_dir, batch_size,
-                 tokenizer, max_length=None, random_transform=False):
+                 tokenizer, image_preprocess_fn, max_length=None, random_transform=False):
         self.ds = flickr_dataset
         self.images_dir = images_dir
         self.batch_size = batch_size
         self.tok = tokenizer
         self.max_length = max_length
         self.max_vocab_size = 1 + len(self.tok.index_word)
+        self.image_preprocess_fn = image_preprocess_fn
 
         if random_transform:
             self.datagen = ImageDataGenerator(
@@ -71,7 +71,7 @@ class Flickr8kImageSequence(Sequence):
         if self.datagen is not None:
             images = [self.datagen.random_transform(im) for im in images]
         images = np.stack(images)
-        norm_images = preprocess_input(images)
+        norm_images = self.image_preprocess_fn(images)
         norm_images = np.asarray(norm_images)
 
         captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]

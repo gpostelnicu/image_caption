@@ -1,7 +1,6 @@
 import logging
 
 from keras import Model
-from keras.applications import VGG16
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
     Flatten
 from keras.losses import categorical_crossentropy
@@ -14,7 +13,8 @@ class E2eModel(object):
                  text_embedding_trainable, img_dense_dim,
                  lstm_units, learning_rate,
                  dropout, recurrent_dropout,
-                 image_layers_to_unfreeze):
+                 image_layers_to_unfreeze,
+                 cnn_model, image_pooling):
         self.img_embedding_shape = img_embedding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -26,12 +26,13 @@ class E2eModel(object):
         self.learning_rate = learning_rate
         self.dropout = dropout
         self.recurrent_dropout = recurrent_dropout
+        self.image_pooling = image_pooling
 
         # TODO: instrument image model to be only partially trainable.
-        # VGG model with no pooling to allow localization of features.
-        self.image_model = VGG16(
+        self.image_model = cnn_model(
             weights='imagenet', include_top=False,
-            input_shape=img_embedding_shape
+            input_shape=img_embedding_shape,
+            pooling=self.image_pooling
         )
         logging.info("Freezing all layers except last {}".format
                      (image_layers_to_unfreeze))

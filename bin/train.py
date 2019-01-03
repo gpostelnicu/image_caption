@@ -16,6 +16,7 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 
 from image_caption import Flickr8KSequence, SimpleModel
+from image_caption.architectures import CNN_ARCHITECTURES
 from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence, \
     Flickr8kImageSequence
 from image_caption.full_model import E2eModel
@@ -291,7 +292,9 @@ def train_e2e(images_dir,
               dropout=0.0,
               recurrent_dropout=0.0,
               image_layers_to_unfreeze=4,
-              train_patience=10
+              train_patience=10,
+              cnn_architecture='vgg16',
+              pooling=None
               ):
     setup_logging()
 
@@ -300,6 +303,8 @@ def train_e2e(images_dir,
     logging.info("Loaded train dataset. Number of samples: {}.".format(len(train_flkr.captions)))
     test_flkr = Flickr8kDataset(captions_path=test_captions_path)
     logging.info("Loaded test dataset. Number of samples: {}.".format(len(test_flkr.captions)))
+
+    cnn_arch = CNN_ARCHITECTURES[cnn_architecture]
 
     if checkpoint_prefix is not None:
         tok_path = '{}_tok.pkl'.format(checkpoint_prefix)
@@ -317,11 +322,12 @@ def train_e2e(images_dir,
     logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
     train_seq = Flickr8kImageSequence(
         train_flkr, images_dir, batch_size, tok, train_flkr.max_length,
-        random_transform=True
+        image_preprocess_fn=cnn_arch.preprocess_fn, random_transform=True
     )
     logging.info("Number of train steps: {}".format(len(train_seq)))
     test_seq = Flickr8kImageSequence(
-        test_flkr, images_dir, batch_size, tok, train_flkr.max_length
+        test_flkr, images_dir, batch_size, tok, train_flkr.max_length,
+        image_preprocess_fn=cnn_arch.preprocess_fn
     )
     logging.info("Number of test steps: {}.".format(len(test_seq)))
 
@@ -342,7 +348,9 @@ def train_e2e(images_dir,
         learning_rate=learning_rate,
         dropout=dropout,
         recurrent_dropout=recurrent_dropout,
-        image_layers_to_unfreeze=image_layers_to_unfreeze
+        image_layers_to_unfreeze=image_layers_to_unfreeze,
+        cnn_model=cnn_arch.model,
+        pooling=pooling
     )
     if checkpoint_prefix is not None:
         model_path = '{}_model.h5'.format(checkpoint_prefix)
