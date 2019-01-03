@@ -44,6 +44,7 @@ class Flickr8kImageSequence(Sequence):
         self.batch_size = batch_size
         self.tok = tokenizer
         self.max_length = max_length
+        self.max_vocab_size = 1 + len(self.tok.index_word)
 
         if random_transform:
             self.datagen = ImageDataGenerator(
@@ -84,7 +85,7 @@ class Flickr8kImageSequence(Sequence):
             outputs.append(pred)
         outputs = np.asarray(outputs)
 
-        return [[transformed_images, partial_captions, outputs]]
+        return [[images, partial_captions, outputs]]
 
 
     @lru_cache(maxsize=30000)
