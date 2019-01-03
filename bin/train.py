@@ -347,7 +347,7 @@ def train_e2e(images_dir,
     if checkpoint_prefix is not None:
         model_path = '{}_model.h5'.format(checkpoint_prefix)
         logging.info("Loading model from checkpoint {}".format(model_path))
-        model.load_weights(model_path)
+        model.keras_model.load_weights(model_path)
 
     out_model = '{}_model.h5'.format(output_prefix)
     callbacks = [
