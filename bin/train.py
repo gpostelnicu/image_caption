@@ -307,11 +307,11 @@ def train_e2e(images_dir,
 
     logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
     train_seq = Flickr8kImageSequence(
-        train_flkr, batch_size, images_dir, tok, train_flkr.max_length
+        train_flkr, images_dir, batch_size, tok, train_flkr.max_length
     )
     logging.info("Number of train steps: {}".format(len(train_seq)))
     test_seq = Flickr8kImageSequence(
-        test_flkr, batch_size, images_dir, tok, train_flkr.max_length
+        test_flkr, images_dir, batch_size, tok, train_flkr.max_length
     )
     logging.info("Number of test steps: {}.".format(len(test_seq)))
 
