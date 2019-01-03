@@ -57,7 +57,9 @@ class E2eModel(object):
 
     def _image_model(self):
         x = self.image_model.output
-        x = Flatten()(x)
+        if self.image_pooling is not None:
+            logging.info("Adding image flattening.")
+            x = Flatten()(x)
         if self.img_dense_dim > 0:
             logging.info("Adding image dense layer with units: {}".format(self.img_dense_dim))
             x = Dense(self.img_dense_dim, activation='relu')(x)
