@@ -8,8 +8,8 @@ Example results:
 
 | Image | Caption |
 |-------|---------|
-| ![alt text](https://github.com/gpostelnicu/image_caption/images/images/890734502_a5ae67beac.jpg) | a young boy in a swimsuit is splashing in the water |
-| ![alt text](https://github.com/gpostelnicu/image_caption/images/images/1304100320_c8990a1539.jpg) | a dog runs through the grass |
+| ![alt text](https://github.com/gpostelnicu/image_caption/blob/master/images/890734502_a5ae67beac.jpg?raw=true) | a young boy in a swimsuit is splashing in the water |
+| ![alt text](https://raw.githubusercontent.com/gpostelnicu/image_caption/master/images/1304100320_c8990a1539.jpg) | a dog runs through the grass |
 
 
 * Free software: MIT license
