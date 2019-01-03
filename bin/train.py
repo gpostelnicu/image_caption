@@ -288,7 +288,8 @@ def train_e2e(images_dir,
               learning_rate=1e-5,
               text_embedding_trainable=False,
               dropout=0.0,
-              recurrent_dropout=0.0
+              recurrent_dropout=0.0,
+              image_layers_to_unfreeze=4
               ):
     setup_logging()
 
@@ -332,7 +333,8 @@ def train_e2e(images_dir,
         lstm_units=lstm_units,
         learning_rate=learning_rate,
         dropout=dropout,
-        recurrent_dropout=recurrent_dropout
+        recurrent_dropout=recurrent_dropout,
+        image_layers_to_unfreeze=image_layers_to_unfreeze
     )
 
     out_model = '{}_model.h5'.format(output_prefix)

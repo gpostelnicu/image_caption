@@ -1,3 +1,5 @@
+import logging
+
 from keras import Model
 from keras.applications import VGG16
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
@@ -11,7 +13,8 @@ class E2eModel(object):
                  text_embedding_matrix, embedding_dim,
                  text_embedding_trainable, img_dense_dim,
                  lstm_units, learning_rate,
-                 dropout, recurrent_dropout):
+                 dropout, recurrent_dropout,
+                 image_layers_to_unfreeze):
         self.img_embedding_shape = img_embedding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -30,6 +33,10 @@ class E2eModel(object):
             weights='imagenet', include_top=False,
             input_shape=img_embedding_shape
         )
+        logging.info("Freezing all layers except last {}".format
+                     (image_layers_to_unfreeze))
+        for layer in self.image_model.layers[:-image_layers_to_unfreeze]:
+            layer.trainable = False
 
         self.keras_model = self._build_model()
 
