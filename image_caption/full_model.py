@@ -57,7 +57,9 @@ class E2eModel(object):
     def _image_model(self):
         x = self.image_model.output
         x = Flatten()(x)
-        x = Dense(self.img_dense_dim, activation='relu')(x)
+        if self.img_dense_dim > 0:
+            logging.info("Adding image dense layer with units: {}".format(self.img_dense_dim))
+            x = Dense(self.img_dense_dim, activation='relu')(x)
         tx = RepeatVector(self.max_caption_len)(x)
         return self.image_model.input, tx
 
