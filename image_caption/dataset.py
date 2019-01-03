@@ -70,7 +70,7 @@ class Flickr8kImageSequence(Sequence):
         images = [self._read_img(ip) for ip in image_paths]
         if self.datagen is not None:
             images = [self.datagen.random_transform(im) for im in images]
-        images = np.concatenate(images)
+        images = np.stack(images)
         norm_images = preprocess_input(images)
         norm_images = np.asarray(norm_images)
 
