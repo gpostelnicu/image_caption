@@ -7,7 +7,7 @@ Example networks generating image captions. Trained on the [Flickr8K](https://fo
 Example results:
 
 | Image | Caption |
---------------------
+|-------|---------|
 | ![alt text](https://github.com/gpostelnicu/image_caption/images/images/890734502_a5ae67beac.jpg) | a young boy in a swimsuit is splashing in the water |
 | ![alt text](https://github.com/gpostelnicu/image_caption/images/images/1304100320_c8990a1539.jpg) | a dog runs through the grass |
 
