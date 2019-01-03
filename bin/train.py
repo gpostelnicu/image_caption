@@ -321,12 +321,13 @@ def train_e2e(images_dir,
 
     logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
     train_seq = Flickr8kImageSequence(
-        train_flkr, images_dir, batch_size, tok, train_flkr.max_length,
+        train_flkr, images_dir, batch_size, tok,
+        max_length=train_flkr.max_length,
         image_preprocess_fn=cnn_arch.preprocess_fn, random_transform=True
     )
     logging.info("Number of train steps: {}".format(len(train_seq)))
     test_seq = Flickr8kImageSequence(
-        test_flkr, images_dir, batch_size, tok, train_flkr.max_length,
+        test_flkr, images_dir, batch_size, tok, max_length=train_flkr.max_length,
         image_preprocess_fn=cnn_arch.preprocess_fn
     )
     logging.info("Number of test steps: {}.".format(len(test_seq)))
@@ -350,7 +351,7 @@ def train_e2e(images_dir,
         recurrent_dropout=recurrent_dropout,
         image_layers_to_unfreeze=image_layers_to_unfreeze,
         cnn_model=cnn_arch.model,
-        pooling=pooling
+        image_pooling=pooling
     )
     if checkpoint_prefix is not None:
         model_path = '{}_model.h5'.format(checkpoint_prefix)
