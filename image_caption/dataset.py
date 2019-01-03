@@ -1,11 +1,14 @@
 import csv
 import logging
+import os
 import pickle
 import random
+from functools import lru_cache
 
 import numpy as np
 
-from keras.preprocessing import sequence
+from keras.preprocessing import sequence, image
+from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing.text import text_to_word_sequence
 from keras.utils import Sequence, to_categorical
 
@@ -31,6 +34,62 @@ class Flickr8kDataset(object):
                 image_ids.append(row[0])
                 captions.append(text_to_word_sequence(row[1]))
         return captions, image_ids
+
+
+class Flickr8kImageSequence(Sequence):
+    def __init__(self, flickr_dataset, images_dir, batch_size,
+                 tokenizer, max_length=None, random_transform=False):
+        self.ds = flickr_dataset
+        self.images_dir = images_dir
+        self.batch_size = batch_size
+        self.tok = tokenizer
+        self.max_length = max_length
+
+        if random_transform:
+            self.datagen = ImageDataGenerator(
+                rotation_range=2.,
+                zoom_range=.02)
+
+        # Indices for random shuffle.
+        self.idx = list(range(len(self.ds)))
+
+    def __len__(self):
+        return len(self.ds) // self.batch_size
+
+    def on_epoch_end(self):
+        random.shuffle(self.idx)
+
+    def __getitem__(self, item):
+        batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
+
+        image_paths = [os.path.join(self.images_dir, self.ds.image_ids[i]) for i in batch_idx]
+        images = np.concatenate([self._read_img(ip) for ip in image_paths])
+        transformed_images = self.datagen.random_transform(images)
+
+        captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
+
+        partial_captions = [c[:-1] for c in captions]
+        partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
+        partial_captions = np.squeeze(partial_captions)
+
+        outputs = []
+        for caption in captions:
+            pred = np.zeros((self.max_length, self.max_vocab_size))
+            for i, n in enumerate(caption[1:]):
+                pred[i, n] = 1.
+
+            outputs.append(pred)
+        outputs = np.asarray(outputs)
+
+        return [[transformed_images, partial_captions, outputs]]
+
+
+    @lru_cache(maxsize=30000)
+    def _read_img(self, im_path):
+        im = image.load_img(im_path, target_size=(224, 224))
+        x = image.img_to_array(im)
+        return x
+
 
 
 class Flickr8kEncodedSequence(Sequence):

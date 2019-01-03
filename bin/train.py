@@ -1,4 +1,4 @@
-#import argparse
+# import argparse
 import csv
 import os
 import pickle
@@ -16,7 +16,9 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 
 from image_caption import Flickr8KSequence, SimpleModel
-from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence
+from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence, \
+    Flickr8kImageSequence
+from image_caption.full_model import E2eModel
 from image_caption.image_encoder import ImageEncoder
 from image_caption.models import EncoderDecoderModel, Word2VecNextWordModel, OneHotNextWordModel
 from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix
@@ -245,6 +247,82 @@ def train(train_image_encodings_path,
     model = SimpleModel(
         text_embedding_matrix=embedding_matrix,
         img_embedding_shape=(512,),
+        max_caption_len=train_flkr.max_length,
+        vocab_size=1 + len(tok.index_word),
+        embedding_dim=embedding_dim + len(special_tokens),
+        text_embedding_trainable=text_embedding_trainable,
+        img_dense_dim=img_dense_dim,
+        lstm_units=lstm_units,
+        learning_rate=learning_rate,
+        dropout=dropout,
+        recurrent_dropout=recurrent_dropout
+    )
+
+    out_model = '{}_model.h5'.format(output_prefix)
+    callbacks = [
+        ModelCheckpoint(out_model, save_best_only=True),
+        EarlyStopping(patience=10),
+        TensorBoard()
+    ]
+    model.keras_model.fit_generator(
+        train_seq,
+        steps_per_epoch=len(train_seq),
+        validation_data=test_seq,
+        validation_steps=len(test_seq),
+        epochs=num_epochs,
+        verbose=1,
+        callbacks=callbacks
+    )
+
+
+def train_e2e(images_dir,
+              training_captions_path,
+              test_captions_path,
+              embeddings_path,
+              output_prefix,
+              num_epochs,
+              embedding_dim=300,
+              img_dense_dim=1024,
+              lstm_units=128,
+              batch_size=16,
+              learning_rate=1e-5,
+              text_embedding_trainable=False,
+              dropout=0.0,
+              recurrent_dropout=0.0
+              ):
+    setup_logging()
+
+    logging.info("Loading Flickr8K train dataset.")
+    train_flkr = Flickr8kDataset(captions_path=training_captions_path)
+    logging.info("Loaded train dataset. Number of samples: {}.".format(len(train_flkr.captions)))
+    test_flkr = Flickr8kDataset(captions_path=test_captions_path)
+    logging.info("Loaded test dataset. Number of samples: {}.".format(len(test_flkr.captions)))
+
+    tok = Tokenizer()
+    tok.fit_on_texts(train_flkr.captions)
+    tok.fit_on_texts(test_flkr.captions)
+    output_path = '{}_tok.pkl'.format(output_prefix)
+    logging.info('Writing tokenizer file to file {}'.format(output_path))
+    pickle.dump(tok, open(output_path, 'wb'))
+
+    logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
+    train_seq = Flickr8kImageSequence(
+        train_flkr, batch_size, images_dir, tok, train_flkr.max_length
+    )
+    logging.info("Number of train steps: {}".format(len(train_seq)))
+    test_seq = Flickr8kImageSequence(
+        test_flkr, batch_size, images_dir, tok, train_flkr.max_length
+    )
+    logging.info("Number of test steps: {}.".format(len(test_seq)))
+
+    special_tokens = ['starttoken', 'endtoken']
+    embeddings = load_fasttext(embeddings_path)
+    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
+                                               special_tokens=special_tokens)
+
+    model = E2eModel(
+        img_embedding_shape=(224, 224, 3),
+        text_embedding_matrix=embedding_matrix,
         max_caption_len=train_flkr.max_length,
         vocab_size=1 + len(tok.index_word),
         embedding_dim=embedding_dim + len(special_tokens),
