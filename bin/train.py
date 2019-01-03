@@ -281,7 +281,7 @@ def train_e2e(images_dir,
               embeddings_path,
               output_prefix,
               num_epochs,
-              checkpoint_model=None,
+              checkpoint_prefix=None,
               embedding_dim=300,
               img_dense_dim=1024,
               lstm_units=128,
@@ -301,12 +301,18 @@ def train_e2e(images_dir,
     test_flkr = Flickr8kDataset(captions_path=test_captions_path)
     logging.info("Loaded test dataset. Number of samples: {}.".format(len(test_flkr.captions)))
 
-    tok = Tokenizer()
-    tok.fit_on_texts(train_flkr.captions)
-    tok.fit_on_texts(test_flkr.captions)
-    output_path = '{}_tok.pkl'.format(output_prefix)
-    logging.info('Writing tokenizer file to file {}'.format(output_path))
-    pickle.dump(tok, open(output_path, 'wb'))
+    if checkpoint_prefix is not None:
+        tok_path = '{}_tok.pkl'.format(checkpoint_prefix)
+        logging.info("Loading tokenizer from file: {}".format(tok_path))
+        tok = pickle.load(open(tok_path, 'rb'))
+    else:
+        logging.info("Generating tokenizer.")
+        tok = Tokenizer()
+        tok.fit_on_texts(train_flkr.captions)
+        tok.fit_on_texts(test_flkr.captions)
+        output_path = '{}_tok.pkl'.format(output_prefix)
+        logging.info('Writing tokenizer file to file {}'.format(output_path))
+        pickle.dump(tok, open(output_path, 'wb'))
 
     logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
     train_seq = Flickr8kImageSequence(
@@ -338,9 +344,10 @@ def train_e2e(images_dir,
         recurrent_dropout=recurrent_dropout,
         image_layers_to_unfreeze=image_layers_to_unfreeze
     )
-    if checkpoint_model is not None:
-        logging.info("Loading model from checkpoint {}".format(checkpoint_model))
-        model.load_weights(checkpoint_model)
+    if checkpoint_prefix is not None:
+        model_path = '{}_model.h5'.format(checkpoint_prefix)
+        logging.info("Loading model from checkpoint {}".format(model_path))
+        model.load_weights(model_path)
 
     out_model = '{}_model.h5'.format(output_prefix)
     callbacks = [
