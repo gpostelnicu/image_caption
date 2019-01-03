@@ -49,6 +49,8 @@ class Flickr8kImageSequence(Sequence):
             self.datagen = ImageDataGenerator(
                 rotation_range=2.,
                 zoom_range=.02)
+        else:
+            self.datagen = None
 
         # Indices for random shuffle.
         self.idx = list(range(len(self.ds)))
@@ -64,7 +66,8 @@ class Flickr8kImageSequence(Sequence):
 
         image_paths = [os.path.join(self.images_dir, self.ds.image_ids[i]) for i in batch_idx]
         images = np.concatenate([self._read_img(ip) for ip in image_paths])
-        transformed_images = self.datagen.random_transform(images)
+        if self.datagen is not None:
+            images = self.datagen.random_transform(images)
 
         captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
 
