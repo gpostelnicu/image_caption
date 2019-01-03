@@ -280,6 +280,7 @@ def train_e2e(images_dir,
               test_captions_path,
               embeddings_path,
               output_prefix,
+              checkpoint_model,
               num_epochs,
               embedding_dim=300,
               img_dense_dim=1024,
@@ -336,6 +337,9 @@ def train_e2e(images_dir,
         recurrent_dropout=recurrent_dropout,
         image_layers_to_unfreeze=image_layers_to_unfreeze
     )
+    if checkpoint_model is not None:
+        logging.info("Loading model from checkpoint {}".format(checkpoint_model))
+        model.load_weights(checkpoint_model)
 
     out_model = '{}_model.h5'.format(output_prefix)
     callbacks = [
