@@ -171,10 +171,8 @@ class SimpleModel(object):
         return word_input, embedding
 
     def _build_seq_output(self, sequence_input):
-            x = TimeDistributed(BatchNormalization(axis=-1))(sequence_input)
-            x = LSTM(units=self.lstm_units, return_sequences=True,
-                     dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
-            time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
-            return time_dist_dense
-
-
+        x = TimeDistributed(BatchNormalization(axis=-1))(sequence_input)
+        x = LSTM(units=self.lstm_units, return_sequences=True,
+            dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
+        time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
+        return time_dist_dense

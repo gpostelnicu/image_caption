@@ -2,6 +2,15 @@
 
 Image Captioning training and inference.
 
+Example networks generating image captions. Trained on the [Flickr8K](https://forms.illinois.edu/sec/1713398) dataset.
+
+Example results:
+
+| Image | Caption |
+--------------------
+| ![alt text](https://github.com/gpostelnicu/image_caption/images/images/890734502_a5ae67beac.jpg) | a young boy in a swimsuit is splashing in the water |
+| ![alt text](https://github.com/gpostelnicu/image_caption/images/images/1304100320_c8990a1539.jpg) | a dog runs through the grass |
+
 
 * Free software: MIT license
 * Documentation: https://image-caption.readthedocs.io.
@@ -38,7 +47,7 @@ PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py encode-text --image-captions-pa
 ** for full LSTM prediction:
 
 ```bash
-PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen3/full --batch-size 128 --learning-rate 1e-4 --lstm-units 512 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --embeddings-path data/fasttext/crawl-300d-2M.vec
+PYTHONPATH=`pwd`:$PYTHONPATH python bin/train.py train --training-captions-path data/gen2/train_captions.tsv --test-captions-path data/gen2/test_captions.tsv --train-image-encodings-path data/gen2/train_image_encodings.pkl --test-image-encodings-path data/gen2/test_image_encodings.pkl --num-epochs 100 --output-prefix data/gen3/lstm_big --batch-size 128 --learning-rate 1e-4 --lstm-units 1024 --embedding-dim 300 --dropout .5 --recurrent-dropout .5 --embeddings-path data/fasttext/crawl-300d-2M.vec
 ```
 
 ```bash
