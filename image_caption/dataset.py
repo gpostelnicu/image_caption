@@ -85,7 +85,7 @@ class Flickr8kImageSequence(Sequence):
             outputs.append(pred)
         outputs = np.asarray(outputs)
 
-        return [[images, partial_captions, outputs]]
+        return [[images, partial_captions], outputs]
 
 
     @lru_cache(maxsize=30000)
