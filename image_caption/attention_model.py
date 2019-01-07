@@ -67,7 +67,7 @@ class AttentionModel(object):
         attention = TimeDistributed(activation)(emb_act)
         attention = Reshape((self.num_vfeats,))(attention)  # tensor is now 1D
         attention = RepeatVector(self.num_vfeats)(attention)  # tensor is now 2D: num_vfeats x num_vfeats
-        out = multiply([word_input, attention])
+        out = multiply([image_input, attention])
 
         model = Model(inputs=[word_input, image_input], output=out)
         return model
