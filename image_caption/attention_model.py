@@ -98,10 +98,10 @@ class AttentionModel(object):
         vg = GlobalAveragePooling1D()(vi)
 
         f_vg = Dense(self.img_dense_dim, activation='relu')(vg)
-        f_vi = Dense(self.vfeats_dim, activation='relu')(vi)
+        #f_vi = Dense(self.vfeats_dim, activation='relu')(vi)
 
         rep_vg = RepeatVector(self.max_caption_len)(f_vg)
-        rep_vi = RepeatVector(self.max_caption_len)(f_vi)
+        rep_vi = TimeDistributed(Dense(self.vfeats_dim, activation='relu'))(vi)
         return self.image_model.input, rep_vg, rep_vi
 
     def _word_model(self):
