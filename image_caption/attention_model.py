@@ -57,7 +57,7 @@ class AttentionModel(object):
         word_x = Dense(self.num_vfeats)(word_input)
         word_emb = RepeatVector(self.num_vfeats)(word_x)
 
-        image_conv = Convolution1D(self.num_vfeats, 1, paddings='same')(image_input)
+        image_conv = Convolution1D(self.num_vfeats, 1, padding='same')(image_input)
 
         emb = add([word_emb, image_conv])
         emb_act = Activation('tanh')(emb)
