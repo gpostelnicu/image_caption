@@ -51,8 +51,8 @@ class AttentionModel(object):
 
         Output is a context-weighted average of localized visual features.
         """
-        word_input = Input(shape=(self.lstm_units,))
-        image_input = Input(shape=(self.num_vfeats, self.vfeats_dim))
+        word_input = Input(shape=(self.lstm_units,), name='attn_word_input')
+        image_input = Input(shape=(self.num_vfeats, self.vfeats_dim), name='attn_image_input')
 
         word_x = Dense(self.num_vfeats)(word_input)
         word_emb = RepeatVector(self.num_vfeats)(word_x)
@@ -95,7 +95,7 @@ class AttentionModel(object):
     def _image_model(self):
         x = self.image_model.output
         vi = Reshape((self.num_vfeats, self.vfeats_dim))(x)
-        vg = GlobalAveragePooling1D()(x)
+        vg = GlobalAveragePooling1D()(vi)
 
         f_vg = Dense(self.img_dense_dim, activation='relu')(vg)
         f_vi = Dense(self.vfeats_dim, activation='relu')(vi)
