@@ -2,7 +2,7 @@ import logging
 
 from keras import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
-    Flatten, Convolution1D, Activation, add, multiply, GlobalAveragePooling1D, Reshape
+    Flatten, Convolution1D, Activation, add, multiply, GlobalAveragePooling1D, Reshape, Permute
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
@@ -65,8 +65,9 @@ class AttentionModel(object):
         # TODO: check if the below is correct: intent is to generatea softmax across each dimension.
         activation = Dense(1, activation='softmax')
         attention = TimeDistributed(activation)(emb_act)
-        attention = Reshape((self.vfeats_dim,))(attention)  # tensor is now 1D
-        attention = RepeatVector(self.num_vfeats)(attention)  # tensor is now 2D: num_vfeats
+        attention = Reshape((self.num_vfeats,))(attention)  # tensor is now 1D
+        attention = RepeatVector(self.vfeats_dim)(attention)  # tensor is now 2D: num_vfeats
+        attention = Permute((2, 1))(attention)
         out = multiply([image_input, attention])
 
         model = Model(inputs=[word_input, image_input], output=out)
