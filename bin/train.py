@@ -17,6 +17,7 @@ from keras.preprocessing.text import Tokenizer
 
 from image_caption import Flickr8KSequence, SimpleModel
 from image_caption.architectures import CNN_ARCHITECTURES
+from image_caption.attention_model import AttentionModel
 from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence, \
     Flickr8kImageSequence
 from image_caption.full_model import E2eModel
@@ -352,6 +353,107 @@ def train_e2e(images_dir,
         image_layers_to_unfreeze=image_layers_to_unfreeze,
         cnn_model=cnn_arch.model,
         image_pooling=pooling
+    )
+    if checkpoint_prefix is not None:
+        model_path = '{}_model.h5'.format(checkpoint_prefix)
+        logging.info("Loading model from checkpoint {}".format(model_path))
+        model.keras_model.load_weights(model_path)
+
+    out_model = '{}_model.h5'.format(output_prefix)
+    callbacks = [
+        ModelCheckpoint(out_model, save_best_only=True),
+        EarlyStopping(patience=train_patience),
+        TensorBoard()
+    ]
+    model.keras_model.fit_generator(
+        train_seq,
+        steps_per_epoch=len(train_seq),
+        validation_data=test_seq,
+        validation_steps=len(test_seq),
+        epochs=num_epochs,
+        verbose=1,
+        callbacks=callbacks
+    )
+
+
+def train_attention(images_dir,
+                    training_captions_path,
+                    test_captions_path,
+                    embeddings_path,
+                    output_prefix,
+                    num_epochs,
+                    checkpoint_prefix=None,
+                    embedding_dim=300,
+                    img_dense_dim=1024,
+                    lstm_units=128,
+                    batch_size=16,
+                    learning_rate=1e-5,
+                    text_embedding_trainable=False,
+                    dropout=0.0,
+                    recurrent_dropout=0.0,
+                    image_layers_to_unfreeze=4,
+                    train_patience=10,
+                    cnn_architecture='vgg16',
+                    num_vfeats=49,
+                    vfeats_dim=1024
+                    ):
+    setup_logging()
+
+    logging.info("Loading Flickr8K train dataset.")
+    train_flkr = Flickr8kDataset(captions_path=training_captions_path)
+    logging.info("Loaded train dataset. Number of samples: {}.".format(len(train_flkr.captions)))
+    test_flkr = Flickr8kDataset(captions_path=test_captions_path)
+    logging.info("Loaded test dataset. Number of samples: {}.".format(len(test_flkr.captions)))
+
+    cnn_arch = CNN_ARCHITECTURES[cnn_architecture]
+
+    if checkpoint_prefix is not None:
+        tok_path = '{}_tok.pkl'.format(checkpoint_prefix)
+        logging.info("Loading tokenizer from file: {}".format(tok_path))
+        tok = pickle.load(open(tok_path, 'rb'))
+    else:
+        logging.info("Generating tokenizer.")
+        tok = Tokenizer()
+        tok.fit_on_texts(train_flkr.captions)
+        tok.fit_on_texts(test_flkr.captions)
+        output_path = '{}_tok.pkl'.format(output_prefix)
+        logging.info('Writing tokenizer file to file {}'.format(output_path))
+        pickle.dump(tok, open(output_path, 'wb'))
+
+    logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
+    train_seq = Flickr8kImageSequence(
+        train_flkr, images_dir, batch_size, tok,
+        max_length=train_flkr.max_length,
+        image_preprocess_fn=cnn_arch.preprocess_fn, random_transform=True
+    )
+    logging.info("Number of train steps: {}".format(len(train_seq)))
+    test_seq = Flickr8kImageSequence(
+        test_flkr, images_dir, batch_size, tok, max_length=train_flkr.max_length,
+        image_preprocess_fn=cnn_arch.preprocess_fn
+    )
+    logging.info("Number of test steps: {}.".format(len(test_seq)))
+
+    special_tokens = ['starttoken', 'endtoken']
+    embeddings = load_fasttext(embeddings_path)
+    embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
+                                               special_tokens=special_tokens)
+
+    model = AttentionModel(
+        img_embedding_shape=(224, 224, 3),
+        text_embedding_matrix=embedding_matrix,
+        max_caption_len=train_flkr.max_length,
+        vocab_size=1 + len(tok.index_word),
+        embedding_dim=embedding_dim + len(special_tokens),
+        text_embedding_trainable=text_embedding_trainable,
+        img_dense_dim=img_dense_dim,
+        lstm_units=lstm_units,
+        learning_rate=learning_rate,
+        dropout=dropout,
+        recurrent_dropout=recurrent_dropout,
+        image_layers_to_unfreeze=image_layers_to_unfreeze,
+        cnn_model=cnn_arch.model,
+        num_vfeats=num_vfeats,
+        vfeats_dim=vfeats_dim
     )
     if checkpoint_prefix is not None:
         model_path = '{}_model.h5'.format(checkpoint_prefix)
