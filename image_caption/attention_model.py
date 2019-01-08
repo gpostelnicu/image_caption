@@ -7,6 +7,8 @@ from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistri
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
+from image_caption.layers.attention import AttentionWeightedAverage
+
 
 class AttentionModel(object):
     def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
@@ -44,37 +46,6 @@ class AttentionModel(object):
 
         self.keras_model = self._build_model()
 
-    def word_attn_model(self, h, vi):
-        """
-        linear used as input to final classifier, embedded used to compute attention
-        """
-
-        h_out_linear = TimeDistributed(Dense(self.attn_embed_dim))(h)
-        z_h_embed = TimeDistributed(RepeatVector(self.num_vfeats))(h_out_linear)
-
-        z_v_linear = TimeDistributed(RepeatVector(self.max_caption_len))(vi)
-        vi_embed = Convolution1D(self.attn_embed_dim, 1, padding='same')(vi)
-        z_v_embed = TimeDistributed(RepeatVector(self.max_caption_len))(vi_embed)
-
-        z_v_linear = Permute((2, 1, 3))(z_v_linear)
-        z_v_embed = Permute((2, 1, 3))(z_v_embed)
-
-        z = add([z_h_embed, z_v_embed])
-        z = TimeDistributed(Activation('tanh'))(z)
-        att = TimeDistributed(Convolution1D(1, 1, padding='same'))(z)
-
-        att = Reshape((self.max_caption_len, self.num_vfeats))(att)
-        att = TimeDistributed(Activation('softmax'))(att)
-        att = TimeDistributed(RepeatVector(self.vfeats_dim))(att)
-        att = Permute((1, 3, 2))(att)
-
-        ctx = multiply([att, z_v_linear])
-        # TODO: Does the lambda need special help to support masking? Does it matter?
-        sum_layer = Lambda(lambda x: K.sum(x, axis=-2), output_shape=(self.attn_embed_dim,))
-        out = TimeDistributed(sum_layer)(ctx)
-        return out
-
-
     def _build_model(self):
         img_input, global_img, local_img = self._image_model()
         word_input, word_model = self._word_model()
@@ -82,7 +53,7 @@ class AttentionModel(object):
         merged = concatenate([word_model, global_img])
         seq_output = self._build_seq_output(merged)
 
-        attn_local_img = self.word_attn_model(seq_output, local_img)
+        attn_local_img = AttentionWeightedAverage(self.attn_embed_dim)([seq_output, local_img])
 
         pred_input = concatenate([seq_output, attn_local_img])
         output = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(pred_input)
