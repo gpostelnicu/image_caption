@@ -70,8 +70,6 @@ class AttentionModel(object):
 
         ctx = multiply([att, z_v_linear])
         # TODO: Does the lambda need special help to support masking? Does it matter?
-        def sum_with_mask(x, mask):
-
         sum_layer = Lambda(lambda x: K.sum(x, axis=-2), output_shape=(self.attn_embed_dim,))
         out = TimeDistributed(sum_layer)(ctx)
         return out
