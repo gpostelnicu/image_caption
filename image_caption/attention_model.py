@@ -49,7 +49,7 @@ class AttentionModel(object):
         linear used as input to final classifier, embedded used to compute attention
         """
 
-        h_out_linear = TimeDistributed(Convolution1D(self.attn_embed_dim, 1, padding='same'))(h)
+        h_out_linear = TimeDistributed(Dense(self.attn_embed_dim, 1, padding='same'))(h)
         z_h_embed = TimeDistributed(RepeatVector(self.num_vfeats))(h_out_linear)
 
         z_v_linear = TimeDistributed(RepeatVector(self.max_caption_len))(vi)
