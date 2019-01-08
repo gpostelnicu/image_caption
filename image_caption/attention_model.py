@@ -1,8 +1,9 @@
 import logging
 
+from keras import backend as K
 from keras import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
-    Flatten, Convolution1D, Activation, add, multiply, GlobalAveragePooling1D, Reshape, Permute
+    Flatten, Convolution1D, Activation, add, multiply, GlobalAveragePooling1D, Reshape, Permute, Lambda
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
@@ -28,6 +29,7 @@ class AttentionModel(object):
         self.recurrent_dropout = recurrent_dropout
         self.num_vfeats = num_vfeats
         self.vfeats_dim = vfeats_dim
+        self.attn_embed_dim = 100
 
         # TODO: instrument image model to be only partially trainable.
         self.image_model = cnn_model(
@@ -42,36 +44,36 @@ class AttentionModel(object):
 
         self.keras_model = self._build_model()
 
-    def word_attn_model(self):
+    def word_attn_model(self, h, vi):
         """
-        Model to generate attention at each time step.
-        Attention is composed of 2 parts:
-        - image localized features (constant throughout time)
-        - word features (output of lstm layer)
-
-        Output is a context-weighted average of localized visual features.
+        linear used as input to final classifier, embedded used to compute attention
         """
-        word_input = Input(shape=(self.lstm_units,), name='attn_word_input')
-        image_input = Input(shape=(self.num_vfeats, self.vfeats_dim), name='attn_image_input')
 
-        word_x = Dense(self.num_vfeats)(word_input)
-        word_emb = RepeatVector(self.num_vfeats)(word_x)
+        h_out_linear = Convolution1D(self.attn_embed_dim, 1, padding='same')(h)
+        z_h_embed = TimeDistributed(RepeatVector(self.num_vfeats))(h_out_linear)
 
-        image_conv = Convolution1D(self.num_vfeats, 1, padding='same')(image_input)
+        z_v_linear = TimeDistributed(RepeatVector(self.max_caption_len))(vi)
+        vi_embed = Convolution1D(self.attn_embed_dim, 1, padding='same')(vi)
+        z_v_embed = TimeDistributed(RepeatVector(self.max_caption_len))(vi_embed)
 
-        emb = add([word_emb, image_conv])
-        emb_act = Activation('tanh')(emb)
+        z_v_linear = Permute((2, 1, 3))(z_v_linear)
+        z_v_embed = Permute((2, 1, 3))(z_v_embed)
 
-        # TODO: check if the below is correct: intent is to generatea softmax across each dimension.
-        activation = Dense(1, activation='softmax')
-        attention = TimeDistributed(activation)(emb_act)
-        attention = Reshape((self.num_vfeats,))(attention)  # tensor is now 1D
-        attention = RepeatVector(self.vfeats_dim)(attention)  # tensor is now 2D: num_vfeats
-        attention = Permute((2, 1))(attention)
-        out = multiply([image_input, attention])
+        z = add([z_h_embed, z_v_embed])
+        z = TimeDistributed(Activation('tanh'))(z)
+        att = TimeDistributed(Convolution1D(1, 1, padding='same'))(z)
 
-        model = Model(inputs=[word_input, image_input], output=out)
-        return model
+        att = Reshape((self.max_caption_len, self.num_vfeats))(att)
+        att = TimeDistributed(Activation('softmax'))(att)
+        att = TimeDistributed(RepeatVector(self.vfeats_dim))(att)
+        att = Permute((1, 3, 2))(att)
+
+        ctx = multiply([att, z_v_linear])
+        # TODO: Does the lambda need special help to support masking? Does it matter?
+        sum_layer = Lambda(lambda x: K.sum(x, axis=-2), output_shape=(self.attn_embed_dim,))
+        out = TimeDistributed(sum_layer)(ctx)
+        return out
+
 
     def _build_model(self):
         img_input, global_img, local_img = self._image_model()
@@ -80,10 +82,9 @@ class AttentionModel(object):
         merged = concatenate([word_model, global_img])
         seq_output = self._build_seq_output(merged)
 
-        attn_model = self.word_attn_model()
-        attn_layer = TimeDistributed(attn_model)([seq_output, local_img])
+        attn_local_img = self.word_attn_model(seq_output, local_img)
 
-        pred_input = concatenate([seq_output, attn_layer])
+        pred_input = concatenate([seq_output, attn_local_img])
         output = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(pred_input)
 
         model = Model(inputs=[img_input, word_input],
@@ -99,11 +100,10 @@ class AttentionModel(object):
         vg = GlobalAveragePooling1D()(vi)
 
         f_vg = Dense(self.img_dense_dim, activation='relu')(vg)
-        #f_vi = Dense(self.vfeats_dim, activation='relu')(vi)
 
         rep_vg = RepeatVector(self.max_caption_len)(f_vg)
-        rep_vi = TimeDistributed(Dense(self.vfeats_dim, activation='relu'))(vi)
-        return self.image_model.input, rep_vg, rep_vi
+        vi = Convolution1D(self.vfeats_dim, 1, padding='same', activation='relu')(vi)
+        return self.image_model.input, rep_vg, vi
 
     def _word_model(self):
         word_input = Input(shape=(self.max_caption_len,), dtype='int32', name='text_input')
