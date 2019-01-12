@@ -48,7 +48,7 @@ class AttentionModel(object):
         self.keras_model = self._build_model()
 
     def _attention(self, vi, h):
-        z_vi = Convolution1D(self.attn_embed_dim, 1, padding='same')(vi)
+        z_vi = TimeDistributed(Convolution1D(self.attn_embed_dim, 1, padding='same'))(vi)
 
         z_h = TimeDistributed(Dense(self.attn_embed_dim))(h)
         z_h = TimeDistributed(RepeatVector(self.num_vfeats))(z_h)
