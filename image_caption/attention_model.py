@@ -33,6 +33,7 @@ class AttentionModel(object):
         self.num_vfeats = num_vfeats
         self.vfeats_dim = vfeats_dim
         self.attn_embed_dim = 100
+        self.mask_zero = False
 
         # TODO: instrument image model to be only partially trainable.
         self.image_model = cnn_model(
@@ -48,6 +49,9 @@ class AttentionModel(object):
         self.keras_model = self._build_model()
 
     def _attention(self, vi, h):
+        vi = K.print_tensor(vi, message='vi = ')
+        h = K.print_tensor(h, message='h = ')
+        
         z_vi = TimeDistributed(Convolution1D(self.attn_embed_dim, 1, padding='same'))(vi)
 
         z_h = TimeDistributed(Dense(self.attn_embed_dim))(h)
@@ -99,7 +103,7 @@ class AttentionModel(object):
         word_input = Input(shape=(self.max_caption_len,), dtype='int32', name='text_input')
         embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
                               input_length=self.max_caption_len, trainable=self.text_embedding_trainable,
-                              mask_zero=True)(word_input)
+                              mask_zero=self.mask_zero)(word_input)
         return word_input, embedding
 
     def _build_seq_output(self, sequence_input):
