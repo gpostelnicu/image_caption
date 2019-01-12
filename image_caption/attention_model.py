@@ -3,7 +3,7 @@ import logging
 from keras import backend as K
 from keras import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
-    Flatten, Convolution1D, Activation, add, multiply, GlobalAveragePooling1D, Reshape, Permute, Lambda
+    Flatten, Convolution1D, Activation, add, multiply, GlobalAveragePooling1D, Reshape, Permute, Lambda, Convolution2D
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
@@ -51,7 +51,7 @@ class AttentionModel(object):
     def _attention(self, vi, h):
         vi = K.print_tensor(vi, message='vi = ')
         h = K.print_tensor(h, message='h = ')
-        
+
         z_vi = TimeDistributed(Convolution1D(self.attn_embed_dim, 1, padding='same'))(vi)
 
         z_h = TimeDistributed(Dense(self.attn_embed_dim))(h)
@@ -60,7 +60,9 @@ class AttentionModel(object):
         tz_vi = RepeatVector4D(self.max_caption_len)(z_vi)
         s = add([tz_vi, z_h])
         alpha = Activation('tanh')(s)
-        alpha = TimeDistributed(TimeDistributed(Dense(1)))(alpha)
+        # For each timestep and vfeat, compute a single weight.
+        # (? equivalent to Convolution2D?)
+        alpha = Convolution2D(1, 1, padding='same')(alpha)
         alpha = TimeDistributed(Activation('softmax'))(alpha)
 
         t_alpha = TimeDistributed(RepeatVector(self.vfeats_dim))(alpha)
