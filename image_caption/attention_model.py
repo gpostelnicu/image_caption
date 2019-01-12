@@ -8,6 +8,7 @@ from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
 from image_caption.layers.attention import AttentionWeightedAverage
+from image_caption.layers.repeat_4d import RepeatVector4D
 
 
 class AttentionModel(object):
@@ -46,6 +47,23 @@ class AttentionModel(object):
 
         self.keras_model = self._build_model()
 
+    def _attention(self, vi, h):
+        z_vi = Convolution1D(self.attn_embed_dim, 1, padding='same')(vi)
+
+        z_h = TimeDistributed(Dense(self.attn_embed_dim))(h)
+        z_h = TimeDistributed(RepeatVector(self.num_vfeats))(z_h)
+
+        tz_vi = RepeatVector4D(self.max_caption_len)(z_vi)
+        s = add([tz_vi, z_h])
+        alpha = Activation('tanh')(s)
+        alpha = TimeDistributed(TimeDistributed(Dense(1)))(alpha)
+        alpha = TimeDistributed(Activation('softmax'))(alpha)
+
+        t_alpha = TimeDistributed(RepeatVector(self.vfeats_dim))(alpha)
+        weighted = multiply([vi, t_alpha])
+        w_avg = Lambda(lambda x: K.sum(x, axis=1))(weighted)
+        return w_avg
+
     def _build_model(self):
         img_input, global_img, local_img = self._image_model()
         word_input, word_model = self._word_model()
@@ -53,7 +71,8 @@ class AttentionModel(object):
         merged = concatenate([word_model, global_img])
         seq_output = self._build_seq_output(merged)
 
-        attn_local_img = AttentionWeightedAverage(self.attn_embed_dim)([seq_output, local_img])
+        vi = RepeatVector4D(self.max_caption_len)(local_img)
+        attn_local_img = self._attention(vi, seq_output)
 
         pred_input = concatenate([seq_output, attn_local_img])
         output = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(pred_input)

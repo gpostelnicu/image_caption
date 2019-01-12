@@ -6,7 +6,7 @@ from keras.engine import Layer
 class AttentionWeightedAverage(Layer):
     """
     Weighted average for image captioning. Inputs:
-    - hidden state of shape (seqdim,)
+    - hidden state of shape (seqdim, seqlen)
     - visual features of shape (vfeat_dim, vfeatlen)
 
     The equation followed is (6) in https://arxiv.org/pdf/1612.01887.pdf
@@ -31,7 +31,7 @@ class AttentionWeightedAverage(Layer):
         if len(input_shape) < 2:
             raise ValueError('An AttentionWeightedAverage layer should have exactly 2 inputs.')
 
-        assert len(input_shape[0]) == 1
+        assert len(input_shape[0]) == 2
         seqdim = input_shape[0][0]
         assert len(input_shape[1]) == 2
         self.vfeat_dim = input_shape[1][0]
