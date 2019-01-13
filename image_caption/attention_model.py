@@ -57,8 +57,8 @@ class AttentionModel(object):
         #vi = K.print_tensor(vi, message='vi = ')
         #h = K.print_tensor(h, message='h = ')
 
-        vi = RepeatVector4D(self.max_caption_len)(vi)
-        z_vi = TimeDistributed(Convolution1D(self.attn_embed_dim, 1, padding='same'))(vi)
+        vi = Convolution1D(self.attn_embed_dim, 1, padding='same')(vi)
+        z_vi = RepeatVector4D(self.max_caption_len)(vi)
 
         z_h = TimeDistributed(Dense(self.attn_embed_dim))(h)
         z_h = TimeDistributed(RepeatVector(self.num_vfeats))(z_h)
