@@ -71,7 +71,8 @@ class AttentionModel(object):
         alpha = Lambda(lambda x: K.squeeze(x, axis=-1))(alpha)  # Make layer 2d: seqlen x num_vfeats
         alpha = TimeDistributed(Activation('softmax'))(alpha)  # weights sum to 1 at each timestep.
 
-        t_alpha = TimeDistributed(RepeatVector(self.vfeats_dim))(alpha)
+        t_alpha = RepeatVector(self.vfeats_dim)(alpha)
+        t_alpha = RepeatVector4D(self.max_caption_len)(t_alpha)
         t_alpha = Permute((1, 3, 2))(t_alpha)
         weighted = multiply([vi, t_alpha])
         w_avg = Lambda(lambda x: K.sum(x, axis=1))(weighted)
