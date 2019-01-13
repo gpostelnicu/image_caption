@@ -68,7 +68,9 @@ class AttentionModel(object):
         # For each timestep and vfeat, compute a single weight.
         # (? equivalent to Convolution2D?)
         alpha = Convolution2D(1, (1, 1), padding='same')(alpha)
-        alpha = Lambda(lambda x: K.squeeze(x, axis=-1))(alpha)  # Make layer 2d: seqlen x num_vfeats
+        alpha = Lambda(
+            lambda x: K.squeeze(x, axis=-1),
+            output_shape=lambda input_shape: input_shape[:-1])(alpha)  # Make layer 2d: seqlen x num_vfeats
         alpha = TimeDistributed(Activation('softmax'))(alpha)  # weights sum to 1 at each timestep.
 
         t_alpha = RepeatVector4D(self.vfeats_dim)(alpha)  # Shape: vfeat_dim x seqlen x n_vfeats
