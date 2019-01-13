@@ -1,13 +1,12 @@
 import logging
 
-from keras import backend as K
 from keras import Model
+from keras import backend as K
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
-    Flatten, Convolution1D, Activation, add, multiply, GlobalAveragePooling1D, Reshape, Permute, Lambda, Convolution2D
+    Convolution1D, Activation, add, multiply, GlobalAveragePooling1D, Reshape, Permute, Lambda, Convolution2D
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
-from image_caption.layers.attention import AttentionWeightedAverage
 from image_caption.layers.repeat_4d import RepeatVector4D
 
 
@@ -49,23 +48,31 @@ class AttentionModel(object):
         self.keras_model = self._build_model()
 
     def _attention(self, vi, h):
-        vi = K.print_tensor(vi, message='vi = ')
-        h = K.print_tensor(h, message='h = ')
+        """
+        Calculates a spatial attention based on the current hidden state and the localized spatial features.
 
+        Given a 2D tensor vfeats_n x vfeats_d and a time distributed vector h (seqlen x lstm_units), an output of shape
+        (seqlen x vfeats_d) is produced.
+        """
+        #vi = K.print_tensor(vi, message='vi = ')
+        #h = K.print_tensor(h, message='h = ')
+
+        vi = RepeatVector4D(self.max_caption_len)(vi)
         z_vi = TimeDistributed(Convolution1D(self.attn_embed_dim, 1, padding='same'))(vi)
 
         z_h = TimeDistributed(Dense(self.attn_embed_dim))(h)
         z_h = TimeDistributed(RepeatVector(self.num_vfeats))(z_h)
 
-        tz_vi = RepeatVector4D(self.max_caption_len)(z_vi)
-        s = add([tz_vi, z_h])
+        s = add([z_vi, z_h])
         alpha = Activation('tanh')(s)
         # For each timestep and vfeat, compute a single weight.
         # (? equivalent to Convolution2D?)
-        alpha = Convolution2D(1, 1, padding='same')(alpha)
-        alpha = TimeDistributed(Activation('softmax'))(alpha)
+        alpha = Convolution2D(1, (1, 1), padding='same')(alpha)
+        alpha = Lambda(lambda x: K.squeeze(x, axis=-1))(alpha)  # Make layer 2d: seqlen x num_vfeats
+        alpha = TimeDistributed(Activation('softmax'))(alpha)  # weights sum to 1 at each timestep.
 
         t_alpha = TimeDistributed(RepeatVector(self.vfeats_dim))(alpha)
+        t_alpha = Permute((1, 3, 2))(t_alpha)
         weighted = multiply([vi, t_alpha])
         w_avg = Lambda(lambda x: K.sum(x, axis=1))(weighted)
         return w_avg
@@ -77,8 +84,7 @@ class AttentionModel(object):
         merged = concatenate([word_model, global_img])
         seq_output = self._build_seq_output(merged)
 
-        vi = RepeatVector4D(self.max_caption_len)(local_img)
-        attn_local_img = self._attention(vi, seq_output)
+        attn_local_img = self._attention(local_img, seq_output)
 
         pred_input = concatenate([seq_output, attn_local_img])
         output = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(pred_input)
