@@ -38,7 +38,8 @@ class Flickr8kDataset(object):
 
 class Flickr8kImageSequence(Sequence):
     def __init__(self, flickr_dataset, images_dir, batch_size,
-                 tokenizer, image_preprocess_fn, max_length=None, random_transform=False):
+                 tokenizer, image_preprocess_fn, max_length=None, random_transform=False,
+                 output_weights=False):
         self.ds = flickr_dataset
         self.images_dir = images_dir
         self.batch_size = batch_size
@@ -53,6 +54,8 @@ class Flickr8kImageSequence(Sequence):
                 zoom_range=.02)
         else:
             self.datagen = None
+
+        self.output_weights = output_weights
 
         # Indices for random shuffle.
         self.idx = list(range(len(self.ds)))
@@ -81,15 +84,28 @@ class Flickr8kImageSequence(Sequence):
         partial_captions = np.squeeze(partial_captions)
 
         outputs = []
+        if self.output_weights:
+            batch_weights = []
+
         for caption in captions:
             pred = np.zeros((self.max_length, self.max_vocab_size))
             for i, n in enumerate(caption[1:]):
                 pred[i, n] = 1.
 
             outputs.append(pred)
-        outputs = np.asarray(outputs)
 
-        return [[norm_images, partial_captions], outputs]
+            if self.output_weights:
+                output_len = len(caption) - 1
+                w = np.concatenate(
+                    (np.ones((output_len, self.max_vocab_size)),
+                     np.zeros(self.max_length - output_len, self.max_vocab_size)))
+                batch_weights.append(w)
+
+        outputs = np.asarray(outputs)
+        if self.output_weights:
+            return [[norm_images, partial_captions], outputs, batch_weights]
+        else:
+            return [[norm_images, partial_captions], outputs]
 
 
     @lru_cache(maxsize=30000)
