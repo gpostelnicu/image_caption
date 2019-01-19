@@ -8,7 +8,7 @@ class RepeatVector4D(Layer):
         self.input_spec = [InputSpec(ndim=3)]
         super().__init__(**kwargs)
 
-    def get_output_shape_for(self, input_shape):
+    def compute_output_shape(self, input_shape):
         print('Received input shape: {}'.format(input_shape))
         return (input_shape[0], self.n, input_shape[1], input_shape[2])
 

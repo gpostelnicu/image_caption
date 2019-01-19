@@ -57,6 +57,8 @@ class AttentionModel(object):
         #vi = K.print_tensor(vi, message='vi = ')
         #h = K.print_tensor(h, message='h = ')
 
+        lin_vi = RepeatVector4D(self.max_caption_len, name='lin_vi')(vi)
+
         vi = Convolution1D(self.attn_embed_dim, 1, padding='same')(vi)
         z_vi = RepeatVector4D(self.max_caption_len)(vi)
 
@@ -75,8 +77,8 @@ class AttentionModel(object):
 
         t_alpha = RepeatVector4D(self.vfeats_dim)(alpha)  # Shape: vfeat_dim x seqlen x n_vfeats
         t_alpha = Permute((2, 3, 1))(t_alpha)  # Desired order: seqlen x n_vfeats x vfeat_dim
-        weighted = multiply([vi, t_alpha])
-        w_avg = Lambda(lambda x: K.sum(x, axis=1))(weighted)
+        weighted = multiply([lin_vi, t_alpha])
+        w_avg = Lambda(lambda x: K.sum(x, axis=2))(weighted)
         return w_avg
 
     def _build_model(self):

@@ -1,28 +1,27 @@
 # import argparse
 import csv
+import logging
 import os
 import pickle
 from collections import defaultdict
 
 import fire
-import logging
-
 import numpy as np
-
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from keras.models import load_model
 from keras.preprocessing import image
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 
-from image_caption import Flickr8KSequence, SimpleModel
+from image_caption import SimpleModel
 from image_caption.architectures import CNN_ARCHITECTURES
 from image_caption.attention_model import AttentionModel
 from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence, \
     Flickr8kImageSequence
 from image_caption.full_model import E2eModel
 from image_caption.image_encoder import ImageEncoder
-from image_caption.models import EncoderDecoderModel, Word2VecNextWordModel, OneHotNextWordModel
+from image_caption.layers.repeat_4d import RepeatVector4D
+from image_caption.models import Word2VecNextWordModel, OneHotNextWordModel
 from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix
 
 
@@ -412,13 +411,18 @@ def train_attention(images_dir,
         logging.info("Loading tokenizer from file: {}".format(tok_path))
         tok = pickle.load(open(tok_path, 'rb'))
     else:
-        logging.info("Generating tokenizer.")
-        tok = Tokenizer()
-        tok.fit_on_texts(train_flkr.captions)
-        tok.fit_on_texts(test_flkr.captions)
-        output_path = '{}_tok.pkl'.format(output_prefix)
-        logging.info('Writing tokenizer file to file {}'.format(output_path))
-        pickle.dump(tok, open(output_path, 'wb'))
+        tok_path = '{}_tok.pkl'.format(output_prefix)
+        # Reload tokenizer file if it exists already.
+        if not os.path.exists(tok_path):
+            logging.info("Generating tokenizer.")
+            tok = Tokenizer()
+            tok.fit_on_texts(train_flkr.captions)
+            tok.fit_on_texts(test_flkr.captions)
+            logging.info('Writing tokenizer file to file {}'.format(tok_path))
+            pickle.dump(tok, open(tok_path, 'wb'))
+        else:
+            logging.info("Loading tokenizer from file: {}".format(tok_path))
+            tok = pickle.load(open(tok_path, 'rb'))
 
     logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
     train_seq = Flickr8kImageSequence(
@@ -501,7 +505,9 @@ def inference_lstm(im_path, model_path, tok_path, max_cap_len=39):
     Perform inference using a model trained to predict LSTM.
     """
     tok = pickle.load(open(tok_path, 'rb'))
-    model = load_model(model_path)
+    model = load_model(
+        model_path,
+        custom_objects={'RepeatVector4D': RepeatVector4D})
     encoder = ImageEncoder(random_transform=False)
     im_encoding = encoder.process(im_path)
 
