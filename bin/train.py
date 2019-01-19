@@ -500,6 +500,38 @@ def encode_images(image_ids_path, im_dir, output_encodings, num_image_transforms
         pickle.dump(im_encodings, fh)
 
 
+def inference_e2e(im_path, model_path, tok_path, max_cap_len=39):
+    """
+    Perform inference using a model trained to predict LSTM.
+    """
+    tok = pickle.load(open(tok_path, 'rb'))
+    model = load_model(
+        model_path,
+        custom_objects={'RepeatVector4D': RepeatVector4D})
+    img = image.load_img(im_path, target_size=(224, 224, 3))
+    im_arr = image.img_to_array(img)
+
+    def encode_partial_cap(partial_cap, im):
+        input_text = [[tok.word_index[w] for w in partial_cap if w in tok.word_index]]
+        input_text = pad_sequences(input_text, maxlen=max_cap_len, padding='post')
+        im = np.array([im])
+        return [im, input_text]
+
+    partial_cap = ['starttoken']
+    EOS_TOKEN = 'endtoken'
+
+    while True:
+        inputs = encode_partial_cap(partial_cap, im_arr)
+        preds = model.predict(inputs)[0, len(partial_cap), :]
+        next_idx = np.argmax(preds, axis=-1)
+        next_word = tok.index_word[next_idx]
+        if next_word == EOS_TOKEN or len(partial_cap) == 39:
+            break
+        partial_cap.append(next_word)
+
+    print(' '.join(partial_cap[1:]))  # skip starttoken.
+
+
 def inference_lstm(im_path, model_path, tok_path, max_cap_len=39):
     """
     Perform inference using a model trained to predict LSTM.
