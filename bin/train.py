@@ -525,7 +525,7 @@ def inference_e2e(im_path, model_path, tok_path, max_cap_len=39):
         preds = model.predict(inputs)[0, len(partial_cap), :]
         next_idx = np.argmax(preds, axis=-1)
         next_word = tok.index_word[next_idx]
-        if next_word == EOS_TOKEN or len(partial_cap) == 39:
+        if next_word == EOS_TOKEN or len(partial_cap) == 38:
             break
         partial_cap.append(next_word)
 
