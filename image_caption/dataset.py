@@ -97,12 +97,13 @@ class Flickr8kImageSequence(Sequence):
             if self.output_weights:
                 output_len = len(caption) - 1
                 w = np.concatenate(
-                    (np.ones((output_len, self.max_vocab_size)),
-                     np.zeros(self.max_length - output_len, self.max_vocab_size)))
+                    (np.ones((output_len,)),
+                     np.zeros(self.max_length - output_len,)))
                 batch_weights.append(w)
 
         outputs = np.asarray(outputs)
         if self.output_weights:
+            batch_weights = np.asarray(batch_weights)
             return [[norm_images, partial_captions], outputs, batch_weights]
         else:
             return [[norm_images, partial_captions], outputs]
