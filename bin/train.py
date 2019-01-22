@@ -294,7 +294,9 @@ def train_e2e(images_dir,
               image_layers_to_unfreeze=4,
               train_patience=10,
               cnn_architecture='vgg16',
-              pooling=None
+              pooling=None,
+              use_sample_weights=False,
+              mask_zeros=True
               ):
     setup_logging()
 
@@ -323,12 +325,13 @@ def train_e2e(images_dir,
     train_seq = Flickr8kImageSequence(
         train_flkr, images_dir, batch_size, tok,
         max_length=train_flkr.max_length,
-        image_preprocess_fn=cnn_arch.preprocess_fn, random_transform=True
+        image_preprocess_fn=cnn_arch.preprocess_fn, random_transform=True,
+        output_weights=use_sample_weights
     )
     logging.info("Number of train steps: {}".format(len(train_seq)))
     test_seq = Flickr8kImageSequence(
         test_flkr, images_dir, batch_size, tok, max_length=train_flkr.max_length,
-        image_preprocess_fn=cnn_arch.preprocess_fn
+        image_preprocess_fn=cnn_arch.preprocess_fn, output_weights=use_sample_weights
     )
     logging.info("Number of test steps: {}.".format(len(test_seq)))
 
@@ -351,7 +354,8 @@ def train_e2e(images_dir,
         recurrent_dropout=recurrent_dropout,
         image_layers_to_unfreeze=image_layers_to_unfreeze,
         cnn_model=cnn_arch.model,
-        image_pooling=pooling
+        image_pooling=pooling,
+        mask_zeros=mask_zeros
     )
     if checkpoint_prefix is not None:
         model_path = '{}_model.h5'.format(checkpoint_prefix)

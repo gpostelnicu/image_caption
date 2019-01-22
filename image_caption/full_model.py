@@ -14,7 +14,7 @@ class E2eModel(object):
                  lstm_units, learning_rate,
                  dropout, recurrent_dropout,
                  image_layers_to_unfreeze,
-                 cnn_model, image_pooling):
+                 cnn_model, image_pooling, mask_zeros):
         self.img_embedding_shape = img_embedding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -27,6 +27,7 @@ class E2eModel(object):
         self.dropout = dropout
         self.recurrent_dropout = recurrent_dropout
         self.image_pooling = image_pooling
+        self.mask_zeros = mask_zeros
 
         # TODO: instrument image model to be only partially trainable.
         self.image_model = cnn_model(
@@ -70,7 +71,7 @@ class E2eModel(object):
         word_input = Input(shape=(self.max_caption_len,), dtype='int32', name='text_input')
         embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
                               input_length=self.max_caption_len, trainable=self.text_embedding_trainable,
-                              mask_zero=True)(word_input)
+                              mask_zero=self.mask_zeros)(word_input)
         return word_input, embedding
 
     def _build_seq_output(self, sequence_input):
