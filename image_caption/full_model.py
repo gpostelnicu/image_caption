@@ -52,7 +52,7 @@ class E2eModel(object):
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
         model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=1.0),
-                      loss=categorical_crossentropy)
+                      loss=categorical_crossentropy, sample_weight_mode='temporal')
         model.summary()
         return model
 
