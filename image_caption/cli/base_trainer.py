@@ -177,7 +177,9 @@ class ImageFirstE2ETrainer(E2ETrainer):
                  recurrent_dropout=0.0,
                  cnn_architecture='resnet50',
                  image_layers_to_unfreeze=4,
-                 pooling=None
+                 pooling=None,
+                 lr_epochs=5,
+                 lr_factor=2.
                  ):
         super().__init__(img_dense_dim=img_dense_dim,
                        train_patience=train_patience,
@@ -189,7 +191,8 @@ class ImageFirstE2ETrainer(E2ETrainer):
                        recurrent_dropout=recurrent_dropout,
                        cnn_architecture=cnn_architecture,
                        image_layers_to_unfreeze=image_layers_to_unfreeze,
-                       pooling=pooling)
+                       pooling=pooling, lr_epochs=lr_epochs, lr_factor=lr_factor
+                    )
         self.captions_start_idx = 1  # Override base class variable to skip <start> token.
 
     def train(self,
