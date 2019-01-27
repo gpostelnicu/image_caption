@@ -1,6 +1,6 @@
 import logging
 
-from keras import Model
+from keras.models import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
     Flatten
 from keras.losses import categorical_crossentropy
@@ -29,7 +29,6 @@ class E2eModel(object):
         self.image_pooling = image_pooling
         self.mask_zeros = mask_zeros
 
-        # TODO: instrument image model to be only partially trainable.
         self.image_model = cnn_model(
             weights='imagenet', include_top=False,
             input_shape=img_embedding_shape,
@@ -44,6 +43,7 @@ class E2eModel(object):
 
     def _build_model(self):
         img_input, img_model = self._image_model()
+        img_model = RepeatVector(self.max_caption_len)(img_model)
         word_input, word_model = self._word_model()
 
         merged = concatenate([word_model, img_model])
@@ -64,8 +64,7 @@ class E2eModel(object):
         if self.img_dense_dim > 0:
             logging.info("Adding image dense layer with units: {}".format(self.img_dense_dim))
             x = Dense(self.img_dense_dim, activation='relu')(x)
-        tx = RepeatVector(self.max_caption_len)(x)
-        return self.image_model.input, tx
+        return self.image_model.input, x
 
     def _word_model(self):
         word_input = Input(shape=(self.max_caption_len,), dtype='int32', name='text_input')
@@ -80,3 +79,25 @@ class E2eModel(object):
                  dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
         time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
         return time_dist_dense
+
+
+class ImageFirstE2EModel(E2eModel):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def _build_model(self):
+        img_input, img_model = self._image_model()
+        transformed_img = Dense(self.embedding_dim)(img_model)
+        tt_img = RepeatVector(1)(transformed_img)
+        word_input, word_model = self._word_model()
+
+        merged = concatenate([tt_img, word_model], axis=2)  # Concatenation adds one time step.
+        seq_output = self._build_seq_output(merged)
+
+        model = Model(inputs=[img_input, word_input],
+                      outputs=seq_output)
+        model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=1.0),
+                      loss=categorical_crossentropy, sample_weight_mode='temporal')
+        model.summary()
+        return model
+

@@ -15,10 +15,10 @@ from keras.preprocessing.text import Tokenizer
 
 from image_caption import SimpleModel
 from image_caption.architectures import CNN_ARCHITECTURES
-from image_caption.attention_model import AttentionModel
+from image_caption.models.attention_model import AttentionModel
 from image_caption.dataset import Flickr8kDataset, Flickr8kEncodedSequence, Flickr8kNextWordSequence, \
     Flickr8kImageSequence
-from image_caption.full_model import E2eModel
+from image_caption.models.full_model import E2eModel
 from image_caption.image_encoder import ImageEncoder
 from image_caption.layers.repeat_4d import RepeatVector4D
 from image_caption.models import Word2VecNextWordModel, OneHotNextWordModel

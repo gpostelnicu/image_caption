@@ -7,11 +7,11 @@ from keras.preprocessing.text import Tokenizer
 
 from image_caption.architectures import CNN_ARCHITECTURES
 from image_caption.dataset import Flickr8kDataset, Flickr8kImageSequence
-from image_caption.full_model import E2eModel
+from image_caption.models import E2eModel, ImageFirstE2EModel
 from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix
 
 
-class Trainer(object):
+class E2ETrainer(object):
     def __init__(self,
                  img_dense_dim=1024,
                  train_patience=10,
@@ -23,7 +23,9 @@ class Trainer(object):
                  recurrent_dropout=0.0,
                  cnn_architecture='resnet50',
                  image_layers_to_unfreeze=4,
-                 pooling=None
+                 pooling=None,
+                 lr_epochs=5,
+                 lr_factor=2.
                  ):
         self.img_dense_dim = img_dense_dim
         self.train_patience = train_patience
@@ -38,8 +40,11 @@ class Trainer(object):
         self.cnn_architecture = cnn_architecture
         self.image_layers_to_unfreeze = image_layers_to_unfreeze
         self.pooling = pooling
+        self.lr_epochs = lr_epochs
+        self.lr_factor = lr_factor
 
         self.cnn_arch = CNN_ARCHITECTURES[self.cnn_architecture]
+        self.captions_start_idx = 0
 
         setup_logging()
 
@@ -75,7 +80,8 @@ class Trainer(object):
             train_flkr, images_dir, batch_size, tok,
             max_length=train_flkr.max_length,
             image_preprocess_fn=self.cnn_arch.preprocess_fn, random_transform=True,
-            output_weights=self.use_sample_weights
+            output_weights=self.use_sample_weights,
+            captions_start_idx=self.captions_start_idx
         )
         logging.info("Number of train steps: {}".format(len(train_seq)))
         test_seq = Flickr8kImageSequence(
@@ -90,9 +96,8 @@ class Trainer(object):
         out_model = '{}_model.h5'.format(output_prefix)
 
         def sched(epoch, lr):
-            print("callback: {}, {}".format(epoch, lr))
-            if epoch > 0 and epoch % 10 == 0:
-                return lr / 5
+            if epoch % self.lr_epochs == self.lr_epochs - 1:
+                return lr / self.lr_factor
             return lr
 
         callbacks = [
@@ -159,5 +164,74 @@ class Trainer(object):
         self.do_train(model, train_seq, test_seq, output_prefix, num_epochs)
 
 
-if __name__ == '__main__':
-    fire.Fire(Trainer)
+class ImageFirstE2ETrainer(E2ETrainer):
+    def __init__(self,
+                 img_dense_dim=1024,
+                 train_patience=10,
+                 learning_rate=1e-4,
+                 use_sample_weights=False,
+                 mask_zeros=True,
+                 lstm_units=512,
+                 dropout=0.0,
+                 recurrent_dropout=0.0,
+                 cnn_architecture='resnet50',
+                 image_layers_to_unfreeze=4,
+                 pooling=None
+                 ):
+        super().__init__(img_dense_dim=img_dense_dim,
+                       train_patience=train_patience,
+                       learning_rate=learning_rate,
+                       use_sample_weights=use_sample_weights,
+                       mask_zeros=mask_zeros,
+                       lstm_units=lstm_units,
+                       dropout=dropout,
+                       recurrent_dropout=recurrent_dropout,
+                       cnn_architecture=cnn_architecture,
+                       image_layers_to_unfreeze=image_layers_to_unfreeze,
+                       pooling=pooling)
+        self.captions_start_idx = 1  # Override base class variable to skip <start> token.
+
+    def train(self,
+              images_dir,
+              embeddings_path,
+              embedding_dim,
+              train_captions_path,
+              test_captions_path,
+              output_prefix,
+              num_epochs,
+              batch_size,
+              checkpoint_prefix=None
+              ):
+        tok, train_seq, test_seq = self.prepare_data(
+            images_dir=images_dir, train_captions_path=train_captions_path, test_captions_path=test_captions_path,
+            checkpoint_prefix=checkpoint_prefix, output_prefix=output_prefix, batch_size=batch_size
+        )
+
+        special_tokens = ['starttoken', 'endtoken']
+        embeddings = load_fasttext(embeddings_path)
+        embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
+                                                   special_tokens=special_tokens)
+
+        model = ImageFirstE2ETrainer(
+            img_embedding_shape=(224, 224, 3),
+            text_embedding_matrix=embedding_matrix,
+            max_caption_len=train_seq.max_length,
+            vocab_size=1 + len(tok.index_word),
+            embedding_dim=embedding_dim + len(special_tokens),
+            text_embedding_trainable=False,
+            img_dense_dim=self.img_dense_dim,
+            lstm_units=self.lstm_units,
+            learning_rate=self.learning_rate,
+            dropout=self.dropout,
+            recurrent_dropout=self.recurrent_dropout,
+            image_layers_to_unfreeze=self.image_layers_to_unfreeze,
+            cnn_model=self.cnn_arch.model,
+            image_pooling=self.pooling,
+            mask_zeros=self.mask_zeros
+        )
+        if checkpoint_prefix is not None:
+            model_path = '{}_model.h5'.format(checkpoint_prefix)
+            logging.info("Loading model from checkpoint {}".format(model_path))
+            model.keras_model.load_weights(model_path)
+
+        self.do_train(model, train_seq, test_seq, output_prefix, num_epochs)

@@ -39,7 +39,7 @@ class Flickr8kDataset(object):
 class Flickr8kImageSequence(Sequence):
     def __init__(self, flickr_dataset, images_dir, batch_size,
                  tokenizer, image_preprocess_fn, max_length=None, random_transform=False,
-                 output_weights=False):
+                 output_weights=False, captions_start_idx=0):
         self.ds = flickr_dataset
         self.images_dir = images_dir
         self.batch_size = batch_size
@@ -47,11 +47,13 @@ class Flickr8kImageSequence(Sequence):
         self.max_length = max_length
         self.max_vocab_size = 1 + len(self.tok.index_word)
         self.image_preprocess_fn = image_preprocess_fn
+        self.captions_start_idx = captions_start_idx
 
         if random_transform:
             self.datagen = ImageDataGenerator(
                 rotation_range=2.,
-                zoom_range=.02)
+                zoom_range=.02
+            )
         else:
             self.datagen = None
 
@@ -79,7 +81,7 @@ class Flickr8kImageSequence(Sequence):
 
         captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
 
-        partial_captions = [c[:-1] for c in captions]
+        partial_captions = [c[self.captions_start_idx:-1] for c in captions]
         partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
         partial_captions = np.squeeze(partial_captions)
 
@@ -238,7 +240,7 @@ class Flickr8kNextWordSequence(Sequence):
 
 class Flickr8KSequence(Sequence):
     def __init__(self, batch_size, encodings_path,
-                 captions_path, max_length=None, index_word=None):
+                 captions_path, max_length=None, index_word=None, captions_start_idx=0):
         self.batch_size = batch_size
         self.encodings = pickle.load(open(encodings_path, 'rb'))
         self.captions, self.image_ids = self._load_captions(captions_path)
@@ -254,6 +256,7 @@ class Flickr8KSequence(Sequence):
             self.index_word = index_word
         self.word_index = self._generate_word_index(self.index_word)
         self.max_vocab_index = max(self.index_word.keys()) + 1
+        self.captions_start_idx = captions_start_idx
 
         # Indices for random shuffle.
         self.idx = list(range(len(self.captions)))
@@ -279,7 +282,7 @@ class Flickr8KSequence(Sequence):
             caption = self.captions[idx]
 
             partial_captions.append(
-                [self.word_index[w] for w in caption[:-1] if w in self.word_index])
+                [self.word_index[w] for w in caption[self.captions_start_idx:-1] if w in self.word_index])
             pred = np.zeros((self.max_length, self.max_vocab_index))
             for i in range(len(caption) - 1):
                 word = caption[i + 1]
