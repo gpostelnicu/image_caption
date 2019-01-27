@@ -46,7 +46,8 @@ def evaluate(model_path, tokenizer_path, captions_path, images_dir,
         score = nltk.translate.bleu_score.sentence_bleu([caption[1:]], partial_cap, weights=[0.5, 0.5, 0.0, 0.0])
         scores.append(score)
         if verbose:
-            print('Target: {}, predicted: {}, score: {}'.format(caption[1:], partial_cap[:-1], score))
+            print('items: {}, Target: {}, predicted: {}, score: {}'.format(
+                len(scores), caption[1:], partial_cap[:-1], score))
         if top_n > 0 and len(scores) >= top_n:
             break
 
