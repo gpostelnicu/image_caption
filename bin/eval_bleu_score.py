@@ -13,7 +13,7 @@ from image_caption.dataset import Flickr8kDataset
 
 
 def evaluate(model_path, tokenizer_path, captions_path, images_dir,
-             max_cap_len=39, verbose=False):
+             max_cap_len=39, include_start_token=True, verbose=False, top_n=-1):
     tok = pickle.load(open(tokenizer_path, 'rb'))
     model = load_model(model_path)
     flkr = Flickr8kDataset(captions_path=captions_path)
@@ -31,6 +31,9 @@ def evaluate(model_path, tokenizer_path, captions_path, images_dir,
         im_arr = image.img_to_array(img)
 
         partial_cap = []
+        if include_start_token:
+            partial_cap.append('starttoken')
+
         while True:
             inputs = encode_partial_cap(partial_cap, im_arr)
             preds = model.predict(inputs)[0, len(partial_cap), :]
@@ -44,6 +47,8 @@ def evaluate(model_path, tokenizer_path, captions_path, images_dir,
         scores.append(score)
         if verbose:
             print('Target: {}, predicted: {}, score: {}'.format(caption[1:], partial_cap[:-1], score))
+        if top_n > 0 and len(scores) >= top_n:
+            break
 
     print('Average score: {}'.format(np.mean(scores)))
 
