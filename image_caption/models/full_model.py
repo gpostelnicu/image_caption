@@ -103,7 +103,7 @@ class ImageFirstE2EModel(E2eModel):
         tt_img = RepeatVector(1)(transformed_img)
         word_input, word_model = self._word_model()
 
-        merged = concatenate([tt_img, word_model], axis=2)  # Concatenation adds one time step.
+        merged = concatenate([tt_img, word_model], axis=-2)  # Concatenation adds one time step.
         seq_output = self._build_seq_output(merged)
 
         model = Model(inputs=[img_input, word_input],
@@ -112,4 +112,12 @@ class ImageFirstE2EModel(E2eModel):
                       loss=categorical_crossentropy, sample_weight_mode='temporal')
         model.summary()
         return model
+
+    def _word_model(self):
+        word_input = Input(shape=(self.max_caption_len - 1,), dtype='int32', name='text_input')
+        embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
+                              input_length=self.max_caption_len - 1, trainable=self.text_embedding_trainable,
+                              mask_zero=self.mask_zeros)(word_input)
+        return word_input, embedding
+
 
