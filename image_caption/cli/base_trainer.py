@@ -91,7 +91,8 @@ class Trainer(object):
         callbacks = [
             ModelCheckpoint(out_model, save_best_only=True),
             EarlyStopping(patience=self.train_patience),
-            LearningRateScheduler(schedule=lambda epoch, lr: lr if epoch % 10 else lr / 5, verbose=1),
+            LearningRateScheduler(
+                schedule=lambda epoch, lr: lr if (epoch % 10 == 0 and epoch > 0) else lr / 5, verbose=1),
             TensorBoard()
         ]
         model.keras_model.fit_generator(
