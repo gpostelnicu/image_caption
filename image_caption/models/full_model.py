@@ -82,8 +82,20 @@ class E2eModel(object):
 
 
 class ImageFirstE2EModel(E2eModel):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
+                 text_embedding_matrix, embedding_dim,
+                 text_embedding_trainable, img_dense_dim,
+                 lstm_units, learning_rate,
+                 dropout, recurrent_dropout,
+                 image_layers_to_unfreeze,
+                 cnn_model, image_pooling, mask_zeros):
+        super().__init__(img_embedding_shape, max_caption_len, vocab_size,
+                         text_embedding_matrix, embedding_dim,
+                         text_embedding_trainable, img_dense_dim,
+                         lstm_units, learning_rate,
+                         dropout, recurrent_dropout,
+                         image_layers_to_unfreeze,
+                         cnn_model, image_pooling, mask_zeros)
 
     def _build_model(self):
         img_input, img_model = self._image_model()
