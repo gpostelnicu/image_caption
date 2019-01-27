@@ -27,7 +27,7 @@ def evaluate(model_path, tokenizer_path, captions_path, images_dir,
     EOS_TOKEN = 'endtoken'
     scores = []
     for imid, caption in flkr:
-        img = image.load(os.path.join(images_dir, imid))
+        img = image.load_img(os.path.join(images_dir, imid))
         im_arr = image.img_to_array(img)
 
         partial_cap = []
