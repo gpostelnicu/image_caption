@@ -86,7 +86,8 @@ class E2ETrainer(object):
         logging.info("Number of train steps: {}".format(len(train_seq)))
         test_seq = Flickr8kImageSequence(
             test_flkr, images_dir, batch_size, tok, max_length=train_flkr.max_length,
-            image_preprocess_fn=self.cnn_arch.preprocess_fn, output_weights=self.use_sample_weights
+            image_preprocess_fn=self.cnn_arch.preprocess_fn, output_weights=self.use_sample_weights,
+            captions_start_idx=self.captions_start_idx
         )
         logging.info("Number of test steps: {}.".format(len(test_seq)))
 

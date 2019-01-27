@@ -82,7 +82,9 @@ class Flickr8kImageSequence(Sequence):
         captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
 
         partial_captions = [c[self.captions_start_idx:-1] for c in captions]
-        partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
+        partial_captions = sequence.pad_sequences(partial_captions,
+                                                  maxlen=self.max_length - self.captions_start_idx,
+                                                  padding='post')
         partial_captions = np.squeeze(partial_captions)
 
         outputs = []
