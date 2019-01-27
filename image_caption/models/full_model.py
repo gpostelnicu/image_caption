@@ -14,7 +14,7 @@ class E2eModel(object):
                  lstm_units, learning_rate,
                  dropout, recurrent_dropout,
                  image_layers_to_unfreeze,
-                 cnn_model, image_pooling, mask_zeros):
+                 cnn_model, image_pooling, mask_zeros, additional_dense_layer_dim=None):
         self.img_embedding_shape = img_embedding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -28,6 +28,7 @@ class E2eModel(object):
         self.recurrent_dropout = recurrent_dropout
         self.image_pooling = image_pooling
         self.mask_zeros = mask_zeros
+        self.additional_dense_layer_dim = additional_dense_layer_dim
 
         self.image_model = cnn_model(
             weights='imagenet', include_top=False,
@@ -77,25 +78,15 @@ class E2eModel(object):
         x = TimeDistributed(BatchNormalization(axis=-1))(sequence_input)
         x = LSTM(units=self.lstm_units, return_sequences=True,
                  dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
+        if self.additional_dense_layer_dim:
+            x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu'))(x)
         time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
         return time_dist_dense
 
 
 class ImageFirstE2EModel(E2eModel):
-    def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
-                 text_embedding_matrix, embedding_dim,
-                 text_embedding_trainable, img_dense_dim,
-                 lstm_units, learning_rate,
-                 dropout, recurrent_dropout,
-                 image_layers_to_unfreeze,
-                 cnn_model, image_pooling, mask_zeros):
-        super().__init__(img_embedding_shape, max_caption_len, vocab_size,
-                         text_embedding_matrix, embedding_dim,
-                         text_embedding_trainable, img_dense_dim,
-                         lstm_units, learning_rate,
-                         dropout, recurrent_dropout,
-                         image_layers_to_unfreeze,
-                         cnn_model, image_pooling, mask_zeros)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def _build_model(self):
         img_input, img_model = self._image_model()

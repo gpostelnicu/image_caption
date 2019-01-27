@@ -16,6 +16,7 @@ class E2ETrainer(object):
                  img_dense_dim=1024,
                  train_patience=10,
                  learning_rate=1e-4,
+                 replace_words_ratio=0.0,
                  use_sample_weights=False,
                  mask_zeros=True,
                  lstm_units=512,
@@ -30,6 +31,7 @@ class E2ETrainer(object):
         self.img_dense_dim = img_dense_dim
         self.train_patience = train_patience
         self.learning_rate = learning_rate
+        self.replace_words_ratio = replace_words_ratio
 
         self.use_sample_weights = use_sample_weights
         self.mask_zeros = mask_zeros
@@ -79,8 +81,8 @@ class E2ETrainer(object):
         train_seq = Flickr8kImageSequence(
             train_flkr, images_dir, batch_size, tok,
             max_length=train_flkr.max_length,
-            image_preprocess_fn=self.cnn_arch.preprocess_fn, random_transform=True,
-            output_weights=self.use_sample_weights,
+            image_preprocess_fn=self.cnn_arch.preprocess_fn, random_image_transform=True,
+            replace_words_ratio=self.replace_words_ratio, output_weights=self.use_sample_weights,
             captions_start_idx=self.captions_start_idx
         )
         logging.info("Number of train steps: {}".format(len(train_seq)))
@@ -179,7 +181,8 @@ class ImageFirstE2ETrainer(E2ETrainer):
                  image_layers_to_unfreeze=4,
                  pooling=None,
                  lr_epochs=5,
-                 lr_factor=2.
+                 lr_factor=2.,
+                 additional_dense_layer_dim=None
                  ):
         super().__init__(img_dense_dim=img_dense_dim,
                        train_patience=train_patience,
@@ -194,6 +197,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
                        pooling=pooling, lr_epochs=lr_epochs, lr_factor=lr_factor
                     )
         self.captions_start_idx = 1  # Override base class variable to skip <start> token.
+        self.additional_dense_layer_dim = additional_dense_layer_dim
 
     def train(self,
               images_dir,
@@ -231,7 +235,8 @@ class ImageFirstE2ETrainer(E2ETrainer):
             image_layers_to_unfreeze=self.image_layers_to_unfreeze,
             cnn_model=self.cnn_arch.model,
             image_pooling=self.pooling,
-            mask_zeros=self.mask_zeros
+            mask_zeros=self.mask_zeros,
+            additional_dense_layer_dim=self.additional_dense_layer_dim
         )
         if checkpoint_prefix is not None:
             model_path = '{}_model.h5'.format(checkpoint_prefix)

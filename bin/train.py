@@ -325,7 +325,7 @@ def train_e2e(images_dir,
     train_seq = Flickr8kImageSequence(
         train_flkr, images_dir, batch_size, tok,
         max_length=train_flkr.max_length,
-        image_preprocess_fn=cnn_arch.preprocess_fn, random_transform=True,
+        image_preprocess_fn=cnn_arch.preprocess_fn, random_image_transform=True,
         output_weights=use_sample_weights
     )
     logging.info("Number of train steps: {}".format(len(train_seq)))
@@ -432,7 +432,7 @@ def train_attention(images_dir,
     train_seq = Flickr8kImageSequence(
         train_flkr, images_dir, batch_size, tok,
         max_length=train_flkr.max_length,
-        image_preprocess_fn=cnn_arch.preprocess_fn, random_transform=True
+        image_preprocess_fn=cnn_arch.preprocess_fn, random_image_transform=True
     )
     logging.info("Number of train steps: {}".format(len(train_seq)))
     test_seq = Flickr8kImageSequence(

@@ -38,8 +38,8 @@ class Flickr8kDataset(object):
 
 class Flickr8kImageSequence(Sequence):
     def __init__(self, flickr_dataset, images_dir, batch_size,
-                 tokenizer, image_preprocess_fn, max_length=None, random_transform=False,
-                 output_weights=False, captions_start_idx=0):
+                 tokenizer, image_preprocess_fn, max_length=None, random_image_transform=False,
+                 replace_words_ratio=0.0, output_weights=False, captions_start_idx=0):
         self.ds = flickr_dataset
         self.images_dir = images_dir
         self.batch_size = batch_size
@@ -49,7 +49,7 @@ class Flickr8kImageSequence(Sequence):
         self.image_preprocess_fn = image_preprocess_fn
         self.captions_start_idx = captions_start_idx
 
-        if random_transform:
+        if random_image_transform:
             self.datagen = ImageDataGenerator(
                 rotation_range=2.,
                 zoom_range=.02
@@ -57,6 +57,7 @@ class Flickr8kImageSequence(Sequence):
         else:
             self.datagen = None
 
+        self.replace_words_ratio = replace_words_ratio
         self.output_weights = output_weights
 
         # Indices for random shuffle.
@@ -82,6 +83,14 @@ class Flickr8kImageSequence(Sequence):
         captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
 
         partial_captions = [c[self.captions_start_idx:-1] for c in captions]
+        if self.replace_words_ratio > 0:
+            def random_replace(lst):
+                rand_idx = np.random.choice(len(lst), int(self.replace_words_ratio * len(lst)), replace=False)
+                for i in rand_idx:
+                    lst[i] = np.random.randint(1, self.max_vocab_size - 1)
+
+            for pc in partial_captions:
+                random_replace(pc)
         partial_captions = sequence.pad_sequences(partial_captions,
                                                   maxlen=self.max_length - self.captions_start_idx,
                                                   padding='post')
