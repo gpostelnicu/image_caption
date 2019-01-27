@@ -12,7 +12,8 @@ from keras.preprocessing.sequence import pad_sequences
 from image_caption.dataset import Flickr8kDataset
 
 
-def evaluate(model_path, tokenizer_path, captions_path, images_dir, max_cap_len=39):
+def evaluate(model_path, tokenizer_path, captions_path, images_dir,
+             max_cap_len=39, verbose=False):
     tok = pickle.load(open(tokenizer_path, 'rb'))
     model = load_model(model_path)
     flkr = Flickr8kDataset(captions_path=captions_path)
@@ -39,7 +40,10 @@ def evaluate(model_path, tokenizer_path, captions_path, images_dir, max_cap_len=
                 break
             partial_cap.append(next_word)
 
-        scores.append(nltk.translate.bleu_score.sentence_bleu([caption[1:]], partial_cap))
+        score = nltk.translate.bleu_score.sentence_bleu([caption[1:]], partial_cap)
+        scores.append(score)
+        if verbose:
+            print('Target: {}, predicted: {}, score: {}'.format(caption[1:], partial_cap, score))
 
     print('Average score: {}'.format(np.mean(scores)))
 
