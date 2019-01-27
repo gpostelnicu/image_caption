@@ -212,7 +212,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
         embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
                                                    special_tokens=special_tokens)
 
-        model = ImageFirstE2ETrainer(
+        model = ImageFirstE2EModel(
             img_embedding_shape=(224, 224, 3),
             text_embedding_matrix=embedding_matrix,
             max_caption_len=train_seq.max_length,
