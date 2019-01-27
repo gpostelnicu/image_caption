@@ -110,9 +110,9 @@ class Trainer(object):
               train_captions_path,
               test_captions_path,
               output_prefix,
-              checkpoint_prefix,
               num_epochs,
-              batch_size
+              batch_size,
+              checkpoint_prefix=None
               ):
         tok, train_seq, test_seq = self.prepare_data(
             images_dir=images_dir, train_captions_path=train_captions_path, test_captions_path=test_captions_path,
