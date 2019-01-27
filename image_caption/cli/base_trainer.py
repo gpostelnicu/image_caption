@@ -88,13 +88,21 @@ class Trainer(object):
 
     def do_train(self, model, train_seq, test_seq, output_prefix, num_epochs):
         out_model = '{}_model.h5'.format(output_prefix)
+
+        def sched(epoch, lr):
+            print("callback: {}, {}".format(epoch, lr))
+            if epoch > 0 and epoch % 10 == 0:
+                return lr / 5
+            return lr
+
         callbacks = [
             ModelCheckpoint(out_model, save_best_only=True),
             EarlyStopping(patience=self.train_patience),
             LearningRateScheduler(
-                schedule=lambda epoch, lr: lr if epoch % 10 > 0 else lr / 5, verbose=1),
+                schedule=sched, verbose=1),
             TensorBoard()
         ]
+
         model.keras_model.fit_generator(
             train_seq,
             steps_per_epoch=len(train_seq),
