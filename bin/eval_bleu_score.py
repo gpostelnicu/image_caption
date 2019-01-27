@@ -40,10 +40,10 @@ def evaluate(model_path, tokenizer_path, captions_path, images_dir,
                 break
             partial_cap.append(next_word)
 
-        score = nltk.translate.bleu_score.sentence_bleu([caption[1:]], partial_cap)
+        score = nltk.translate.bleu_score.sentence_bleu([caption[1:]], partial_cap, weights=[0.5, 0.5, 0.0, 0.0])
         scores.append(score)
         if verbose:
-            print('Target: {}, predicted: {}, score: {}'.format(caption[1:], partial_cap, score))
+            print('Target: {}, predicted: {}, score: {}'.format(caption[1:], partial_cap[:-1], score))
 
     print('Average score: {}'.format(np.mean(scores)))
 
