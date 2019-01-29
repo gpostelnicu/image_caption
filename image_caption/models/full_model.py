@@ -86,8 +86,8 @@ class E2eModel(object):
 
 class ImageFirstE2EModel(E2eModel):
     def __init__(self, cnn_dropout, **kwargs):
-        super().__init__(**kwargs)
         self.cnn_dropout = cnn_dropout
+        super().__init__(**kwargs)  # Calls _build_model
 
     def _build_model(self):
         img_input, img_model = self._image_model()
