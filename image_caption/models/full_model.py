@@ -2,7 +2,7 @@ import logging
 
 from keras.models import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
-    Flatten
+    Flatten, Dropout
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
@@ -85,12 +85,14 @@ class E2eModel(object):
 
 
 class ImageFirstE2EModel(E2eModel):
-    def __init__(self, **kwargs):
+    def __init__(self, cnn_dropout, **kwargs):
         super().__init__(**kwargs)
+        self.cnn_dropout = cnn_dropout
 
     def _build_model(self):
         img_input, img_model = self._image_model()
         transformed_img = Dense(self.embedding_dim)(img_model)
+        transformed_img = Dropout(self.cnn_dropout)(transformed_img)
         tt_img = RepeatVector(1)(transformed_img)
         word_input, word_model = self._word_model()
 

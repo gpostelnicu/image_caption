@@ -182,7 +182,8 @@ class ImageFirstE2ETrainer(E2ETrainer):
                  pooling=None,
                  lr_epochs=5,
                  lr_factor=2.,
-                 additional_dense_layer_dim=None
+                 additional_dense_layer_dim=None,
+                 cnn_dropout=0.0
                  ):
         super().__init__(img_dense_dim=img_dense_dim,
                        train_patience=train_patience,
@@ -198,6 +199,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
                     )
         self.captions_start_idx = 1  # Override base class variable to skip <start> token.
         self.additional_dense_layer_dim = additional_dense_layer_dim
+        self.cnn_dropout = cnn_dropout
 
     def train(self,
               images_dir,
@@ -236,7 +238,8 @@ class ImageFirstE2ETrainer(E2ETrainer):
             cnn_model=self.cnn_arch.model,
             image_pooling=self.pooling,
             mask_zeros=self.mask_zeros,
-            additional_dense_layer_dim=self.additional_dense_layer_dim
+            additional_dense_layer_dim=self.additional_dense_layer_dim,
+            cnn_dropout=self.cnn_dropout
         )
         if checkpoint_prefix is not None:
             model_path = '{}_model.h5'.format(checkpoint_prefix)
