@@ -87,7 +87,7 @@ class Flickr8kImageSequence(Sequence):
             def random_replace(lst):
                 rand_idx = np.random.choice(len(lst), int(self.replace_words_ratio * len(lst)), replace=False)
                 for i in rand_idx:
-                    lst[i] = np.random.randint(1, self.max_vocab_size - 1)
+                    lst[i] = [np.random.randint(1, self.max_vocab_size - 1)]
 
             for pc in partial_captions:
                 random_replace(pc)
