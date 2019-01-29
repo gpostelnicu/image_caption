@@ -176,6 +176,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
                  mask_zeros=True,
                  lstm_units=512,
                  dropout=0.0,
+                 replace_words_ratio=0.0,
                  recurrent_dropout=0.0,
                  cnn_architecture='resnet50',
                  image_layers_to_unfreeze=4,
@@ -186,17 +187,18 @@ class ImageFirstE2ETrainer(E2ETrainer):
                  cnn_dropout=0.0
                  ):
         super().__init__(img_dense_dim=img_dense_dim,
-                       train_patience=train_patience,
-                       learning_rate=learning_rate,
-                       use_sample_weights=use_sample_weights,
-                       mask_zeros=mask_zeros,
-                       lstm_units=lstm_units,
-                       dropout=dropout,
-                       recurrent_dropout=recurrent_dropout,
-                       cnn_architecture=cnn_architecture,
-                       image_layers_to_unfreeze=image_layers_to_unfreeze,
-                       pooling=pooling, lr_epochs=lr_epochs, lr_factor=lr_factor
-                    )
+                         train_patience=train_patience,
+                         learning_rate=learning_rate,
+                         use_sample_weights=use_sample_weights,
+                         mask_zeros=mask_zeros,
+                         lstm_units=lstm_units,
+                         dropout=dropout,
+                         replace_words_ratio=replace_words_ratio,
+                         recurrent_dropout=recurrent_dropout,
+                         cnn_architecture=cnn_architecture,
+                         image_layers_to_unfreeze=image_layers_to_unfreeze,
+                         pooling=pooling, lr_epochs=lr_epochs, lr_factor=lr_factor
+                         )
         self.captions_start_idx = 1  # Override base class variable to skip <start> token.
         self.additional_dense_layer_dim = additional_dense_layer_dim
         self.cnn_dropout = cnn_dropout
