@@ -225,6 +225,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
                                                    special_tokens=special_tokens)
 
         model = ImageFirstE2EModel(
+            cnn_dropout=self.cnn_dropout,
             img_embedding_shape=(224, 224, 3),
             text_embedding_matrix=embedding_matrix,
             max_caption_len=train_seq.max_length,
@@ -240,8 +241,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
             cnn_model=self.cnn_arch.model,
             image_pooling=self.pooling,
             mask_zeros=self.mask_zeros,
-            additional_dense_layer_dim=self.additional_dense_layer_dim,
-            cnn_dropout=self.cnn_dropout
+            additional_dense_layer_dim=self.additional_dense_layer_dim
         )
         if checkpoint_prefix is not None:
             model_path = '{}_model.h5'.format(checkpoint_prefix)
