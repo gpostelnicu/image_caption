@@ -53,7 +53,9 @@ class Flickr8kImageSequence(Sequence):
             self.datagen = ImageDataGenerator(
                 rotation_range=2.,
                 zoom_range=.02,
-                brightness_range=[.8, 1.2]
+                brightness_range=[.8, 1.2],
+                width_shift_range=0.1,
+                height_shift_range=0.1
             )
         else:
             self.datagen = None

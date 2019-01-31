@@ -197,7 +197,8 @@ class ImageFirstE2ETrainer(E2ETrainer):
                          recurrent_dropout=recurrent_dropout,
                          cnn_architecture=cnn_architecture,
                          image_layers_to_unfreeze=image_layers_to_unfreeze,
-                         pooling=pooling, lr_epochs=lr_epochs, lr_factor=lr_factor
+                         pooling=pooling, lr_epochs=lr_epochs, lr_factor=lr_factor,
+                         text_embedding_trainable=False
                          )
         self.captions_start_idx = 1  # Override base class variable to skip <start> token.
         self.additional_dense_layer_dim = additional_dense_layer_dim
@@ -231,7 +232,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
             max_caption_len=train_seq.max_length,
             vocab_size=1 + len(tok.index_word),
             embedding_dim=embedding_dim + len(special_tokens),
-            text_embedding_trainable=False,
+            text_embedding_trainable=text_embedding_trainable,
             img_dense_dim=self.img_dense_dim,
             lstm_units=self.lstm_units,
             learning_rate=self.learning_rate,
