@@ -19,7 +19,7 @@ class WordInference(object):
         return [im_arr, input_text]
 
     def process_image(self, im_path):
-        im = image.load_img(im_path)
+        im = image.load_img(im_path, target_size=self.target_size)
         im_arr = image.img_to_array(im)
 
         partial_cap = []
