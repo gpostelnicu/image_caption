@@ -1,6 +1,6 @@
 from keras import Model
 from keras.layers import concatenate, Input, Dense, RepeatVector, Embedding, BatchNormalization, Bidirectional, LSTM, \
-    TimeDistributed, Add, Concatenate, Multiply
+    TimeDistributed, Add, Concatenate, Multiply, add
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
@@ -44,7 +44,7 @@ class OneHotNextWordModel(object):
                              return_sequences=(i + 1 < self.num_lstm_layers))(full_text)
         full_text = BatchNormalization()(full_text)
 
-        encoded = Concatenate()([full_text, full_image])
+        encoded = add([full_text, full_image])
 
         decoder = encoded
         for _ in range(self.num_dense_layers):

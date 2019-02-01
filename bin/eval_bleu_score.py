@@ -10,6 +10,7 @@ import nltk
 from keras.preprocessing.sequence import pad_sequences
 
 from image_caption.dataset import Flickr8kDataset
+from image_caption.inference import WordInference
 
 
 def evaluate(model_path, tokenizer_path, captions_path, images_dir,
@@ -55,6 +56,29 @@ def evaluate(model_path, tokenizer_path, captions_path, images_dir,
             break
 
     print('Average score: bleu1 = {}, bleu2 = {}'.format(np.mean(scores_bleu1), np.mean(scores_bleu2)))
+
+
+def evaluate_next_word(model_path, tokenizer_path, captions_path, images_dir,
+                       max_cap_len=39, include_start_token=True, verbose=False, top_n=-1):
+    inference = WordInference(model_path, tokenizer_path, max_cap_len)
+    flkr = Flickr8kDataset(captions_path)
+
+    scores_bleu1 = []
+    scores_bleu2 = []
+
+    for imid, caption in flkr:
+        pred_caption = inference.process_image(os.path.join(images_dir, imid))
+
+        bleu1 = nltk.translate.bleu_score.sentence_bleu([caption[1:]], pred_caption, weights=[1., 0., 0., 0.])
+        bleu2 = nltk.translate.bleu_score.sentence_bleu([caption[1:]], pred_caption, weights=[0., 1., 0., 0.])
+
+        scores_bleu1.append(bleu1)
+        scores_bleu2.append(bleu2)
+
+        if top_n > 0 and len(scores_bleu1) >= top_n:
+            break
+
+    print('Average score: bleu1={}, bleu2={}'.format(np.mean(scores_bleu1), np.mean(scores_bleu2)))
 
 
 if __name__ == '__main__':
