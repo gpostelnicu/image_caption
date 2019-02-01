@@ -72,13 +72,13 @@ def train_out_onehot(
 
     logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
     train_seq = Flickr8kNextWordSequence(
-        train_flkr, images_dir, batch_size, tok,
+        images_dir, train_flkr, batch_size, tok,
         max_length=train_flkr.max_length,
         image_preprocess_fn=cnn_arch.preprocess_fn, random_image_transform=True,
     )
     logging.info("Number of train steps: {}".format(len(train_seq)))
     test_seq = Flickr8kNextWordSequence(
-        test_flkr, images_dir, batch_size, tok, max_length=train_flkr.max_length,
+        images_dir, test_flkr, batch_size, tok, max_length=train_flkr.max_length,
         image_preprocess_fn=cnn_arch.preprocess_fn
     )
     logging.info("Number of test steps: {}.".format(len(test_seq)))
