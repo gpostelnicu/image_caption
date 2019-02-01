@@ -183,11 +183,12 @@ class Flickr8kEncodedSequence(Sequence):
 
 
 class Flickr8kNextWordSequence(Sequence):
-    def __init__(self, flickr_dataset, batch_size, tokenizer, max_length, num_image_versions,
-                 word_embeddings=None, random_image_transform=False):
+    def __init__(self, images_dir, flickr_dataset, batch_size, tokenizer, max_length,
+                 num_image_versions, word_embeddings=None, random_image_transform=False):
         """
         output_type can be 'word' or 'sequence'
         """
+        self.images_dir = images_dir
         self.batch_size = batch_size
         self.ds = flickr_dataset
         self.tok = tokenizer
@@ -255,12 +256,6 @@ class Flickr8kNextWordSequence(Sequence):
                 out_imid.append(imid)
                 out_next.append(caption[j])
         return out_prev, out_imid, out_next
-
-    def _get_image_encoding(self, imid):
-        i = random.randint(0, self.num_image_versions - 1)
-        full_id = '{}-{}'.format(imid, i)
-        encoding = self.encodings[full_id]
-        return encoding
 
     def _target_fasttext(self, word_id):
         return self.word_embeddings[word_id]
