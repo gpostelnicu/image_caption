@@ -124,7 +124,6 @@ class Flickr8kImageSequence(Sequence):
         else:
             return [[norm_images, partial_captions], outputs]
 
-
     @lru_cache(maxsize=30000)
     def _read_img(self, im_path):
         im = image.load_img(im_path, target_size=(224, 224))
@@ -184,14 +183,13 @@ class Flickr8kEncodedSequence(Sequence):
 
 
 class Flickr8kNextWordSequence(Sequence):
-    def __init__(self, flickr_dataset, batch_size, encodings_path, tokenizer, max_length, num_image_versions,
-                 word_embeddings=None):
+    def __init__(self, flickr_dataset, batch_size, tokenizer, max_length, num_image_versions,
+                 word_embeddings=None, random_image_transform=False):
         """
         output_type can be 'word' or 'sequence'
         """
         self.batch_size = batch_size
         self.ds = flickr_dataset
-        self.encodings = pickle.load(open(encodings_path, 'rb'))
         self.tok = tokenizer
         self.max_vocab_size = 1 + len(self.tok.index_word)
         self.max_length = max_length
@@ -201,6 +199,17 @@ class Flickr8kNextWordSequence(Sequence):
             logging.info("Will output word embeddings.")
 
         self.ds_prev, self.ds_imid, self.ds_next = self._split_captions()
+
+        if random_image_transform:
+            self.datagen = ImageDataGenerator(
+                rotation_range=2.,
+                zoom_range=.02,
+                brightness_range=[.8, 1.2],
+                width_shift_range=0.1,
+                height_shift_range=0.1
+            )
+        else:
+            self.datagen = None
 
         # Indices for random shuffle.
         self.idx = list(range(len(self.ds_prev)))
@@ -214,8 +223,13 @@ class Flickr8kNextWordSequence(Sequence):
     def __getitem__(self, item):
         batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
 
-        images = [self._get_image_encoding(self.ds_imid[i]) for i in batch_idx]
-        images = np.asarray(images)
+        image_paths = [os.path.join(self.images_dir, self.ds.image_ids[i]) for i in batch_idx]
+        images = [self._read_img(ip) for ip in image_paths]
+        if self.datagen:
+            images = [self.datagen.random_transform(im) for im in images]
+        images = np.stack(images)
+        norm_images = np.stack(images)
+        norm_images = np.asarray(norm_images)
 
         partial_captions = [self.ds_prev[i] for i in batch_idx]
         partial_captions = sequence.pad_sequences(partial_captions, maxlen=self.max_length, padding='post')
@@ -224,7 +238,7 @@ class Flickr8kNextWordSequence(Sequence):
             out = np.array([self._target_fasttext(self.ds_next[i]) for i in batch_idx])
         else:
             out = to_categorical([self.ds_next[i] for i in batch_idx], num_classes=self.max_vocab_size)
-        return [[images, partial_captions], out]
+        return [[norm_images, partial_captions], out]
 
     def _split_captions(self):
         out_prev = []
@@ -250,6 +264,13 @@ class Flickr8kNextWordSequence(Sequence):
 
     def _target_fasttext(self, word_id):
         return self.word_embeddings[word_id]
+
+    @lru_cache(maxsize=30000)
+    def _read_img(self, im_path):
+        im = image.load_img(im_path, target_size=(224, 224))
+        x = image.img_to_array(im)
+        return x
+
 
 
 class Flickr8KSequence(Sequence):

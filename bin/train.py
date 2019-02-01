@@ -26,10 +26,9 @@ from image_caption.utils import setup_logging, load_fasttext, create_embedding_m
 
 
 def train_out_onehot(
-    train_image_encodings_path,
     training_captions_path,
-    test_image_encodings_path,
     test_captions_path,
+    images_dir,
     embeddings_path,
     output_prefix,
     num_epochs,
@@ -62,21 +61,30 @@ def train_out_onehot(
     tok = Tokenizer()
     tok.fit_on_texts(train_flkr.captions)
     tok.fit_on_texts(test_flkr.captions)
-    output_path = '{}-tok.pkl'.format(output_prefix)
+    output_path = '{}_tok.pkl'.format(output_prefix)
     logging.info('Writing tokenizer file to file {}'.format(output_path))
     pickle.dump(tok, open(output_path, 'wb'))
 
     embeddings = load_fasttext(embeddings_path)
     embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim, special_tokens=[])
 
-    train_seq = Flickr8kNextWordSequence(
-        train_flkr, batch_size, train_image_encodings_path,
-        tok, train_flkr.max_length, num_image_versions
+    cnn_arch = CNN_ARCHITECTURES['resnet50']
+
+    logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
+    train_seq = Flickr8kImageSequence(
+        train_flkr, images_dir, batch_size, tok,
+        max_length=train_flkr.max_length,
+        image_preprocess_fn=cnn_arch.preprocess_fn, random_image_transform=True,
+        replace_words_ratio=0.1, output_weights=True,
+        captions_start_idx=0
     )
-    test_seq = Flickr8kNextWordSequence(
-        test_flkr, batch_size, test_image_encodings_path,
-        tok, train_flkr.max_length, num_image_versions
+    logging.info("Number of train steps: {}".format(len(train_seq)))
+    test_seq = Flickr8kImageSequence(
+        test_flkr, images_dir, batch_size, tok, max_length=train_flkr.max_length,
+        image_preprocess_fn=cnn_arch.preprocess_fn, output_weights=True,
+        captions_start_idx=1
     )
+    logging.info("Number of test steps: {}.".format(len(test_seq)))
 
     model = OneHotNextWordModel(
         img_encoding_shape=(512,),

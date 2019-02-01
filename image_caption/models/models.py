@@ -1,17 +1,18 @@
+import logging
+
 from keras import Model
 from keras.layers import concatenate, Input, Dense, RepeatVector, Embedding, BatchNormalization, Bidirectional, LSTM, \
-    TimeDistributed, Add, Concatenate, Multiply, add
+    TimeDistributed, Add, Concatenate, Multiply, add, Flatten
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 
 
 class OneHotNextWordModel(object):
-    def __init__(self, img_encoding_shape, max_caption_len, vocab_size,
+    def __init__(self, cnn_model, img_embedding_shape, max_caption_len, vocab_size,
                  embedding_dim, text_embedding_matrix, lstm_units,
                  img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
                  dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1,
-                 loss='categorical_crossentropy', num_lstm_layers=1):
-        self.img_encoding_shape = img_encoding_shape
+                 loss='categorical_crossentropy', num_lstm_layers=1, image_pooling='avg'):
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
         self.embedding_dim = embedding_dim
@@ -26,13 +27,30 @@ class OneHotNextWordModel(object):
         self.loss = loss
         self.optimizer = Adam(lr=self.learning_rate, clipnorm=1.0)
         self.num_lstm_layers = num_lstm_layers
+        self.image_pooling = image_pooling
+
+        self.image_model = cnn_model(
+            weights='imagenet', include_top=False,
+            input_shape=img_embedding_shape,
+            pooling=self.image_pooling
+        )
 
         self.keras_model = self._build_model()
         self.keras_model.summary()
 
+    def _image_model(self):
+        x = self.image_model.output
+        if self.image_pooling is None:
+            logging.info("Adding image flattening.")
+            x = Flatten()(x)
+        if self.img_dense_dim > 0:
+            logging.info("Adding image dense layer with units: {}".format(self.img_dense_dim))
+            x = Dense(self.img_dense_dim, activation='relu')(x)
+        return self.image_model.input, x
+
     def _build_model(self):
-        image_input = Input(shape=self.img_encoding_shape, name='image_input')
-        full_image = Dense(self.lstm_units, activation='relu', name='image_feature')(image_input)
+        img_input, img_model = self._image_model()
+        full_image = Dense(self.lstm_units, activation='relu', name='image_feature')(img_model)
         full_image = BatchNormalization()(full_image)
 
         text_input = Input(shape=(self.max_caption_len,), name='text_input')
@@ -51,7 +69,7 @@ class OneHotNextWordModel(object):
             decoder = Dense(self.decoder_dense_dim, activation='relu')(decoder)
         output = self._build_final_layer(decoder)
 
-        model = Model(inputs=[image_input, text_input], outputs=output)
+        model = Model(inputs=[img_input, text_input], outputs=output)
         model.compile(loss=self.loss, optimizer=self.optimizer)
 
         return model
