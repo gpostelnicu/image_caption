@@ -16,7 +16,7 @@ class WordInference(object):
     def _encode_partial_caption(self, partial_caption, im_arr):
         input_text = [[self.tok.word_index[w] for w in partial_caption if w in self.tok.word_index]]
         input_text = sequence.pad_sequences(input_text, maxlen=self.max_cap_len, padding='post')
-        return [im_arr, input_text]
+        return [np.array([im_arr]), input_text]
 
     def process_image(self, im_path):
         im = image.load_img(im_path, target_size=self.target_size)
