@@ -1,4 +1,5 @@
 import logging
+import string
 import sys
 
 import numpy as np
@@ -77,3 +78,13 @@ def write_embeddings(dic, fname, embedding_size=300):
             v = dic[k]
             fh.write('{} {}\n'.format(k, ' '.join(str(f) for f in v)))
         fh.close()
+
+
+def cleanup_caption(caption):
+    table = str.maketrans(string.punctuation, ''.join([' ' for _ in range(len(string.punctuation))]))
+    words = caption.translate(table)
+    words = words.split(' ')
+    words = [w for w in words if len(w) > 1]
+    words = [w for w in words if w.isalpha()]
+    return ' '.join(words)
+

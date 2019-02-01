@@ -22,7 +22,7 @@ from image_caption.models.full_model import E2eModel
 from image_caption.image_encoder import ImageEncoder
 from image_caption.layers.repeat_4d import RepeatVector4D
 from image_caption.models import Word2VecNextWordModel, OneHotNextWordModel
-from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix
+from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix, cleanup_caption
 
 
 def train_out_onehot(
@@ -614,9 +614,10 @@ def encode_text(image_captions_path, imids_path, output_path):
         for imid in imids:
             im_captions = captions[imid]
             for caption in im_captions:
+                clean_caption = cleanup_caption(caption)
                 writer.writerow([
                     imid,
-                    'starttoken {} endtoken'.format(caption)
+                    'starttoken {} endtoken'.format(clean_caption)
                 ])
 
 
