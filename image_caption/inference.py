@@ -6,7 +6,7 @@ import numpy as np
 
 
 class WordInference(object):
-    def __init__(self, model_path, tok_path, max_cap_len=39, target_size=(224, 224, 3)):
+    def __init__(self, model_path, tok_path, max_cap_len=39, target_size=(224, 224)):
         with open(tok_path, 'rb') as fh:
             self.tok = pickle.load(fh)
         self.model = load_model(model_path)
