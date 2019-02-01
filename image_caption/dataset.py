@@ -184,7 +184,7 @@ class Flickr8kEncodedSequence(Sequence):
 
 class Flickr8kNextWordSequence(Sequence):
     def __init__(self, images_dir, flickr_dataset, batch_size, tokenizer, max_length,
-                 num_image_versions, word_embeddings=None, random_image_transform=False):
+                 image_preprocess_fn, word_embeddings=None, random_image_transform=False):
         """
         output_type can be 'word' or 'sequence'
         """
@@ -194,8 +194,8 @@ class Flickr8kNextWordSequence(Sequence):
         self.tok = tokenizer
         self.max_vocab_size = 1 + len(self.tok.index_word)
         self.max_length = max_length
-        self.num_image_versions = num_image_versions
         self.word_embeddings = word_embeddings
+        self.image_preprocess_fn = image_preprocess_fn
         if self.word_embeddings is not None:
             logging.info("Will output word embeddings.")
 
@@ -229,7 +229,7 @@ class Flickr8kNextWordSequence(Sequence):
         if self.datagen:
             images = [self.datagen.random_transform(im) for im in images]
         images = np.stack(images)
-        norm_images = np.stack(images)
+        norm_images = self.image_preprocess_fn(images)
         norm_images = np.asarray(norm_images)
 
         partial_captions = [self.ds_prev[i] for i in batch_idx]

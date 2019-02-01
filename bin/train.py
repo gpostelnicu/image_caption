@@ -71,18 +71,15 @@ def train_out_onehot(
     cnn_arch = CNN_ARCHITECTURES['resnet50']
 
     logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
-    train_seq = Flickr8kImageSequence(
+    train_seq = Flickr8kNextWordSequence(
         train_flkr, images_dir, batch_size, tok,
         max_length=train_flkr.max_length,
         image_preprocess_fn=cnn_arch.preprocess_fn, random_image_transform=True,
-        replace_words_ratio=0.1, output_weights=True,
-        captions_start_idx=0
     )
     logging.info("Number of train steps: {}".format(len(train_seq)))
-    test_seq = Flickr8kImageSequence(
+    test_seq = Flickr8kNextWordSequence(
         test_flkr, images_dir, batch_size, tok, max_length=train_flkr.max_length,
-        image_preprocess_fn=cnn_arch.preprocess_fn, output_weights=True,
-        captions_start_idx=1
+        image_preprocess_fn=cnn_arch.preprocess_fn
     )
     logging.info("Number of test steps: {}.".format(len(test_seq)))
 
