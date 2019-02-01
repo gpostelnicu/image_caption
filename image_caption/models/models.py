@@ -8,8 +8,8 @@ from keras.optimizers import Adam
 
 
 class OneHotNextWordModel(object):
-    def __init__(self, cnn_model, img_embedding_shape, max_caption_len, vocab_size,
-                 embedding_dim, text_embedding_matrix, lstm_units,
+    def __init__(self, cnn_model, max_caption_len, vocab_size,
+                 embedding_dim, text_embedding_matrix, lstm_units, img_embedding_shape=(224, 224, 3),
                  img_dense_dim=256, decoder_dense_dim=256, learning_rate=1e-4,
                  dropout=0.0, recurrent_dropout=0.0, num_dense_layers=1,
                  loss='categorical_crossentropy', num_lstm_layers=1, image_pooling='avg'):

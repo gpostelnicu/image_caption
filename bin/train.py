@@ -87,6 +87,7 @@ def train_out_onehot(
     logging.info("Number of test steps: {}.".format(len(test_seq)))
 
     model = OneHotNextWordModel(
+        cnn_model=cnn_arch.model,
         max_caption_len=train_flkr.max_length,
         vocab_size=1 + len(tok.index_word),
         embedding_dim=embedding_dim,
