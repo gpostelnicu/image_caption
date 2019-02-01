@@ -34,6 +34,8 @@ class OneHotNextWordModel(object):
             input_shape=img_embedding_shape,
             pooling=self.image_pooling
         )
+        for layer in self.image_model.layers:
+            layer.trainable = False
 
         self.keras_model = self._build_model()
         self.keras_model.summary()
