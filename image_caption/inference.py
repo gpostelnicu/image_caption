@@ -1,7 +1,7 @@
 import pickle
 
 from keras.models import load_model
-from keras.preprocessing import image, , sequence
+from keras.preprocessing import image, sequence
 import numpy as np
 
 

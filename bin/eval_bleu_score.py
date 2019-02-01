@@ -59,7 +59,7 @@ def evaluate(model_path, tokenizer_path, captions_path, images_dir,
 
 
 def evaluate_next_word(model_path, tokenizer_path, captions_path, images_dir,
-                       max_cap_len=39, include_start_token=True, verbose=False, top_n=-1):
+                       max_cap_len=39, verbose=False, top_n=-1):
     inference = WordInference(model_path, tokenizer_path, max_cap_len)
     flkr = Flickr8kDataset(captions_path)
 
@@ -74,6 +74,10 @@ def evaluate_next_word(model_path, tokenizer_path, captions_path, images_dir,
 
         scores_bleu1.append(bleu1)
         scores_bleu2.append(bleu2)
+        if verbose:
+            print('Ref caption: {}, pred caption: {}, bleu1={}, bleu2={}, imid={}'.format(
+                caption, pred_caption, bleu1, bleu2, imid
+            ))
 
         if top_n > 0 and len(scores_bleu1) >= top_n:
             break
