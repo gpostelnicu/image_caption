@@ -88,3 +88,9 @@ def cleanup_caption(caption):
     words = [w for w in words if w.isalpha()]
     return ' '.join(words)
 
+
+def filter_tokenizer(tok, min_docs_per_word=5):
+    words_to_keep = [k for k, v in tok.word_docs.items() if v >= min_docs_per_word]
+    tok.word_index = dict(enumerate(words_to_keep))
+    tok.index_word = {v:k for k, v in tok.word_index.items()}
+

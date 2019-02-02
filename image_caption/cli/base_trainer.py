@@ -8,7 +8,7 @@ from keras.preprocessing.text import Tokenizer
 from image_caption.architectures import CNN_ARCHITECTURES
 from image_caption.dataset import Flickr8kDataset, Flickr8kImageSequence
 from image_caption.models import E2eModel, ImageFirstE2EModel
-from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix
+from image_caption.utils import setup_logging, load_fasttext, create_embedding_matrix, filter_tokenizer
 
 
 class E2ETrainer(object):
@@ -70,9 +70,12 @@ class E2ETrainer(object):
             tok = pickle.load(open(tok_path, 'rb'))
         else:
             logging.info("Generating tokenizer.")
-            tok = Tokenizer()
+            tok = Tokenizer(oov_token='unk')
+            filter_tokenizer(tok, 5)
             tok.fit_on_texts(train_flkr.captions)
             tok.fit_on_texts(test_flkr.captions)
+            # Remove words that appear in less than 5 documents.
+
             output_path = '{}_tok.pkl'.format(output_prefix)
             logging.info('Writing tokenizer file to file {}'.format(output_path))
             pickle.dump(tok, open(output_path, 'wb'))

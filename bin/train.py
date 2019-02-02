@@ -36,13 +36,13 @@ def train_out_onehot(
     img_dense_dim=128,
     lstm_units=128,
     batch_size=64,
-    num_image_versions=5,
     learning_rate=1e-5,
     dropout=0.1,
     recurrent_dropout=0.1,
     decoder_dense_dim=256,
     loss='categorical_crossentropy',
     num_dense_layers=1,
+    cnn_architecture='vgg16',
     num_lstm_layers=1):
     setup_logging()
 
@@ -68,7 +68,7 @@ def train_out_onehot(
     embeddings = load_fasttext(embeddings_path)
     embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim, special_tokens=[])
 
-    cnn_arch = CNN_ARCHITECTURES['resnet50']
+    cnn_arch = CNN_ARCHITECTURES[cnn_architecture]
 
     logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
     train_seq = Flickr8kNextWordSequence(
