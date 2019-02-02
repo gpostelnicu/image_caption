@@ -211,13 +211,13 @@ class ImageFirstE2ETrainer(E2ETrainer):
 
     def train(self,
               images_dir,
-              embeddings_path,
               embedding_dim,
               train_captions_path,
               test_captions_path,
               output_prefix,
               num_epochs,
               batch_size,
+              embeddings_path=None,
               checkpoint_prefix=None
               ):
         tok, train_seq, test_seq = self.prepare_data(
