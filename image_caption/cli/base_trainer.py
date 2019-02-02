@@ -189,6 +189,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
                  lr_factor=2.,
                  additional_dense_layer_dim=None,
                  cnn_dropout=0.0,
+                 text_dropout=0.0,
                  text_embedding_trainable=False
                  ):
         super().__init__(img_dense_dim=img_dense_dim,
@@ -207,6 +208,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
         self.captions_start_idx = 1  # Override base class variable to skip <start> token.
         self.additional_dense_layer_dim = additional_dense_layer_dim
         self.cnn_dropout = cnn_dropout
+        self.text_dropout = text_dropout
         self.text_embedding_trainable = text_embedding_trainable
 
     def train(self,
@@ -235,6 +237,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
 
         model = ImageFirstE2EModel(
             cnn_dropout=self.cnn_dropout,
+            text_dropout=self.text_dropout,
             img_embedding_shape=(224, 224, 3),
             text_embedding_matrix=embedding_matrix,
             max_caption_len=train_seq.max_length,

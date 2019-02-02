@@ -91,8 +91,9 @@ class E2eModel(object):
 
 
 class ImageFirstE2EModel(E2eModel):
-    def __init__(self, cnn_dropout, **kwargs):
+    def __init__(self, cnn_dropout, text_dropout, **kwargs):
         self.cnn_dropout = cnn_dropout
+        self.text_dropout = text_dropout
         super().__init__(**kwargs)  # Calls _build_model
 
     def _build_model(self):
@@ -100,7 +101,9 @@ class ImageFirstE2EModel(E2eModel):
         transformed_img = Dense(self.embedding_dim)(img_model)
         transformed_img = Dropout(self.cnn_dropout)(transformed_img)
         tt_img = RepeatVector(1)(transformed_img)
+
         word_input, word_model = self._word_model(self.max_caption_len - 1)
+        word_model = Dropout(self.text_dropout)(word_model)
 
         merged = concatenate([tt_img, word_model], axis=-2)  # Concatenation adds one time step.
         seq_output = self._build_seq_output(merged)
