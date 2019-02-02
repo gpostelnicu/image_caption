@@ -225,7 +225,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
             checkpoint_prefix=checkpoint_prefix, output_prefix=output_prefix, batch_size=batch_size
         )
 
-        special_tokens = ['starttoken', 'endtoken']
+        special_tokens = ['starttoken', 'endtoken', 'unk']
         embeddings = load_fasttext(embeddings_path)
         embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
                                                    special_tokens=special_tokens)
