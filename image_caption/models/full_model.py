@@ -45,7 +45,7 @@ class E2eModel(object):
     def _build_model(self):
         img_input, img_model = self._image_model()
         img_model = RepeatVector(self.max_caption_len)(img_model)
-        word_input, word_model = self._word_model()
+        word_input, word_model = self._word_model(self.max_caption_len)
 
         merged = concatenate([word_model, img_model])
         seq_output = self._build_seq_output(merged)
@@ -67,11 +67,17 @@ class E2eModel(object):
             x = Dense(self.img_dense_dim, activation='relu')(x)
         return self.image_model.input, x
 
-    def _word_model(self):
-        word_input = Input(shape=(self.max_caption_len,), dtype='int32', name='text_input')
-        embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
-                              input_length=self.max_caption_len, trainable=self.text_embedding_trainable,
-                              mask_zero=self.mask_zeros)(word_input)
+    def _word_model(self, seq_len):
+        word_input = Input(shape=(seq_len,), dtype='int32', name='text_input')
+        if self.text_embedding_matrix:
+            embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
+                                  input_length=seq_len, trainable=self.text_embedding_trainable,
+                                  mask_zero=self.mask_zeros)(word_input)
+        else:
+            logging.info("Empty embeddings weights")
+            embedding = Embedding(self.vocab_size, self.embedding_dim,
+                                  input_length=seq_len, trainable=True,
+                                  mask_zero=self.mask_zeros)(word_input)
         return word_input, embedding
 
     def _build_seq_output(self, sequence_input):
@@ -94,7 +100,7 @@ class ImageFirstE2EModel(E2eModel):
         transformed_img = Dense(self.embedding_dim)(img_model)
         transformed_img = Dropout(self.cnn_dropout)(transformed_img)
         tt_img = RepeatVector(1)(transformed_img)
-        word_input, word_model = self._word_model()
+        word_input, word_model = self._word_model(self.max_caption_len - 1)
 
         merged = concatenate([tt_img, word_model], axis=-2)  # Concatenation adds one time step.
         seq_output = self._build_seq_output(merged)
@@ -105,12 +111,5 @@ class ImageFirstE2EModel(E2eModel):
                       loss=categorical_crossentropy, sample_weight_mode='temporal')
         model.summary()
         return model
-
-    def _word_model(self):
-        word_input = Input(shape=(self.max_caption_len - 1,), dtype='int32', name='text_input')
-        embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
-                              input_length=self.max_caption_len - 1, trainable=self.text_embedding_trainable,
-                              mask_zero=self.mask_zeros)(word_input)
-        return word_input, embedding
 
 

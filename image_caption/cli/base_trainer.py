@@ -226,9 +226,12 @@ class ImageFirstE2ETrainer(E2ETrainer):
         )
 
         special_tokens = ['starttoken', 'endtoken', 'unk']
-        embeddings = load_fasttext(embeddings_path)
-        embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
-                                                   special_tokens=special_tokens)
+
+        embedding_matrix = None
+        if embeddings_path:
+            embeddings = load_fasttext(embeddings_path)
+            embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
+                                                       special_tokens=special_tokens)
 
         model = ImageFirstE2EModel(
             cnn_dropout=self.cnn_dropout,
