@@ -4,7 +4,7 @@ from keras.models import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
     Flatten, Dropout
 from keras.losses import categorical_crossentropy
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 
 
 class E2eModel(object):
@@ -52,7 +52,7 @@ class E2eModel(object):
 
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
-        model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=1.0),
+        model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=1.0),
                       loss=categorical_crossentropy, sample_weight_mode='temporal')
         model.summary()
         return model
@@ -101,7 +101,7 @@ class ImageFirstE2EModel(E2eModel):
 
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
-        model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=1.0),
+        model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=1.0),
                       loss=categorical_crossentropy, sample_weight_mode='temporal')
         model.summary()
         return model
