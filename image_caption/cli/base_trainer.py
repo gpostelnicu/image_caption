@@ -71,11 +71,12 @@ class E2ETrainer(object):
         else:
             logging.info("Generating tokenizer.")
             tok = Tokenizer(oov_token='unk')
-            filter_tokenizer(tok, 5)
             tok.fit_on_texts(train_flkr.captions)
             tok.fit_on_texts(test_flkr.captions)
             # Remove words that appear in less than 5 documents.
-
+            filter_tokenizer(tok, 5)
+            logging.info('Words in tokenizer: {}'.format(len(tok.word_index)))
+            
             output_path = '{}_tok.pkl'.format(output_prefix)
             logging.info('Writing tokenizer file to file {}'.format(output_path))
             pickle.dump(tok, open(output_path, 'wb'))
