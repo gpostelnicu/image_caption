@@ -103,7 +103,8 @@ class ImageFirstE2EModel(E2eModel):
         tt_img = RepeatVector(1)(transformed_img)
 
         word_input, word_model = self._word_model(self.max_caption_len - 1)
-        word_model = Dropout(self.text_dropout)(word_model)
+        if self.text_dropout > 0:
+            word_model = Dropout(self.text_dropout)(word_model)
 
         merged = concatenate([tt_img, word_model], axis=-2)  # Concatenation adds one time step.
         seq_output = self._build_seq_output(merged)
