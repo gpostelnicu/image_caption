@@ -76,7 +76,7 @@ class E2ETrainer(object):
             # Remove words that appear in less than 5 documents.
             filter_tokenizer(tok, 5)
             logging.info('Words in tokenizer: {}'.format(len(tok.word_index)))
-            
+
             output_path = '{}_tok.pkl'.format(output_prefix)
             logging.info('Writing tokenizer file to file {}'.format(output_path))
             pickle.dump(tok, open(output_path, 'wb'))

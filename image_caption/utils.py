@@ -91,6 +91,6 @@ def cleanup_caption(caption):
 
 def filter_tokenizer(tok, min_docs_per_word=5):
     words_to_keep = [k for k, v in tok.word_docs.items() if v >= min_docs_per_word]
-    tok.word_index = dict(enumerate(words_to_keep))
+    tok.word_index = dict([(w, i + 1) for i, w in enumerate(words_to_keep)])
     tok.index_word = {v:k for k, v in tok.word_index.items()}
 
