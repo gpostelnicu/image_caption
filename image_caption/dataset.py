@@ -3,6 +3,7 @@ import logging
 import os
 import pickle
 import random
+from collections import defaultdict
 from functools import lru_cache
 
 import numpy as np
@@ -23,6 +24,12 @@ class Flickr8kDataset(object):
 
     def __iter__(self):
         yield from zip(self.image_ids, self.captions)
+
+    def image_id_map(self):
+        by_id = defaultdict(list)
+        for imid, caption in self:
+            by_id[imid].append(caption)
+        return by_id
 
     @staticmethod
     def _load_captions(captions_path):
