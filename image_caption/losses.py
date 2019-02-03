@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 def categorical_crossentropy_from_logits(y_true, y_pred):
     # Discarding is still needed although CaptionPreprocessor.preprocess_batch
     # has added dummy words as all-zeros arrays because the sum of losses is
