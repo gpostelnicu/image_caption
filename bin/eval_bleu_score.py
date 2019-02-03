@@ -1,3 +1,4 @@
+import logging
 import os
 
 import numpy as np
@@ -11,10 +12,12 @@ from keras.preprocessing.sequence import pad_sequences
 
 from image_caption.dataset import Flickr8kDataset
 from image_caption.inference import WordInference
+from image_caption.utils import setup_logging
 
 
 def evaluate(model_path, tokenizer_path, captions_path, images_dir,
              max_cap_len=39, include_start_token=True, verbose=False, top_n=-1):
+    setup_logging()
     tok = pickle.load(open(tokenizer_path, 'rb'))
     model = load_model(model_path)
     flkr = Flickr8kDataset(captions_path=captions_path)

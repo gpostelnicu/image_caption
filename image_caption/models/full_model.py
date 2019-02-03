@@ -6,6 +6,8 @@ from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistri
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam, RMSprop
 
+from image_caption.losses import categorical_crossentropy_from_logits
+
 
 class E2eModel(object):
     def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
@@ -56,7 +58,7 @@ class E2eModel(object):
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
         model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=1.0),
-                      loss=categorical_crossentropy, sample_weight_mode='temporal')
+                      loss=categorical_crossentropy_from_logits, sample_weight_mode='temporal')
         model.summary()
         return model
 
@@ -65,9 +67,12 @@ class E2eModel(object):
         if self.image_pooling is None:
             logging.info("Adding image flattening.")
             x = Flatten()(x)
+
+        x = BatchNormalization(axis=-1)(x)
         if self.img_dense_dim > 0:
             logging.info("Adding image dense layer with units: {}".format(self.img_dense_dim))
             x = Dense(self.img_dense_dim, activation='relu')(x)
+
         return self.image_model.input, x
 
     def _word_model(self, seq_len):
@@ -84,13 +89,15 @@ class E2eModel(object):
         return word_input, embedding
 
     def _build_seq_output(self, sequence_input):
-        x = TimeDistributed(BatchNormalization(axis=-1))(sequence_input)
+        x = sequence_input
         for _ in range(self.num_lstm_layers):
+            x = BatchNormalization(axis=-1)(x)
             x = LSTM(units=self.lstm_units, return_sequences=True,
                      dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
+
         if self.additional_dense_layer_dim:
             x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu'))(x)
-        time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
+        time_dist_dense = TimeDistributed(Dense(self.vocab_size))(x)
         return time_dist_dense
 
 
@@ -98,12 +105,16 @@ class ImageFirstE2EModel(E2eModel):
     def __init__(self, cnn_dropout, text_dropout, **kwargs):
         self.cnn_dropout = cnn_dropout
         self.text_dropout = text_dropout
+
         super().__init__(**kwargs)  # Calls _build_model
+        assert self.img_dense_dim == self.embedding_dim
 
     def _build_model(self):
         img_input, img_model = self._image_model()
-        transformed_img = Dense(self.embedding_dim)(img_model)
-        transformed_img = Dropout(self.cnn_dropout)(transformed_img)
+
+        transformed_img = img_model
+        if self.cnn_dropout > 0:
+            transformed_img = Dropout(self.cnn_dropout)(transformed_img)
         tt_img = RepeatVector(1)(transformed_img)
 
         word_input, word_model = self._word_model(self.max_caption_len - 1)
@@ -116,7 +127,7 @@ class ImageFirstE2EModel(E2eModel):
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
         model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=1.0),
-                      loss=categorical_crossentropy, sample_weight_mode='temporal')
+                      loss=categorical_crossentropy_from_logits, sample_weight_mode='temporal')
         model.summary()
         return model
 
