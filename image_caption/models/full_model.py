@@ -69,7 +69,7 @@ class E2eModel(object):
 
     def _word_model(self, seq_len):
         word_input = Input(shape=(seq_len,), dtype='int32', name='text_input')
-        if self.text_embedding_matrix:
+        if self.text_embedding_matrix is not None:
             embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
                                   input_length=seq_len, trainable=self.text_embedding_trainable,
                                   mask_zero=self.mask_zeros)(word_input)
