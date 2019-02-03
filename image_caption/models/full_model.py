@@ -3,11 +3,8 @@ import logging
 from keras.models import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
     Flatten, Dropout
-from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam, RMSprop
-
-from image_caption.losses import categorical_crossentropy_from_logits
-
+import tensorflow as tf
 
 class E2eModel(object):
     def __init__(self, img_embedding_shape, max_caption_len, vocab_size,
@@ -58,7 +55,7 @@ class E2eModel(object):
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
         model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=1.0),
-                      loss=categorical_crossentropy_from_logits, sample_weight_mode='temporal')
+                      loss=tf.nn.softmax_cross_entropy_with_logits, sample_weight_mode='temporal')
         model.summary()
         return model
 
@@ -127,7 +124,7 @@ class ImageFirstE2EModel(E2eModel):
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
         model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=1.0),
-                      loss=categorical_crossentropy_from_logits, sample_weight_mode='temporal')
+                      loss=tf.nn.softmax_cross_entropy_with_logits, sample_weight_mode='temporal')
         model.summary()
         return model
 
