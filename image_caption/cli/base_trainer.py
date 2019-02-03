@@ -26,7 +26,8 @@ class E2ETrainer(object):
                  image_layers_to_unfreeze=4,
                  pooling=None,
                  lr_epochs=5,
-                 lr_factor=2.
+                 lr_factor=2.,
+                 num_lstm_layers=1
                  ):
         self.img_dense_dim = img_dense_dim
         self.train_patience = train_patience
@@ -44,6 +45,8 @@ class E2ETrainer(object):
         self.pooling = pooling
         self.lr_epochs = lr_epochs
         self.lr_factor = lr_factor
+
+        self.num_lstm_layers = num_lstm_layers
 
         self.cnn_arch = CNN_ARCHITECTURES[self.cnn_architecture]
         self.captions_start_idx = 0
@@ -112,7 +115,7 @@ class E2ETrainer(object):
             EarlyStopping(patience=self.train_patience),
             LearningRateScheduler(
                 schedule=sched, verbose=1),
-            TensorBoard()
+            TensorBoard(log_dir='{}_logs'.format(output_prefix))
         ]
 
         model.keras_model.fit_generator(
@@ -187,6 +190,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
                  pooling=None,
                  lr_epochs=5,
                  lr_factor=2.,
+                 num_lstm_layers=1,
                  additional_dense_layer_dim=None,
                  cnn_dropout=0.0,
                  text_dropout=0.0,
@@ -203,7 +207,8 @@ class ImageFirstE2ETrainer(E2ETrainer):
                          recurrent_dropout=recurrent_dropout,
                          cnn_architecture=cnn_architecture,
                          image_layers_to_unfreeze=image_layers_to_unfreeze,
-                         pooling=pooling, lr_epochs=lr_epochs, lr_factor=lr_factor
+                         pooling=pooling, lr_epochs=lr_epochs, lr_factor=lr_factor,
+                         num_lstm_layers=num_lstm_layers
                          )
         self.captions_start_idx = 1  # Override base class variable to skip <start> token.
         self.additional_dense_layer_dim = additional_dense_layer_dim
@@ -253,7 +258,8 @@ class ImageFirstE2ETrainer(E2ETrainer):
             cnn_model=self.cnn_arch.model,
             image_pooling=self.pooling,
             mask_zeros=self.mask_zeros,
-            additional_dense_layer_dim=self.additional_dense_layer_dim
+            additional_dense_layer_dim=self.additional_dense_layer_dim,
+            num_lstm_layers=self.num_lstm_layers
         )
         if checkpoint_prefix is not None:
             model_path = '{}_model.h5'.format(checkpoint_prefix)

@@ -14,7 +14,9 @@ class E2eModel(object):
                  lstm_units, learning_rate,
                  dropout, recurrent_dropout,
                  image_layers_to_unfreeze,
-                 cnn_model, image_pooling, mask_zeros, additional_dense_layer_dim=None):
+                 cnn_model, image_pooling, mask_zeros,
+                 num_lstm_layers=1,
+                 additional_dense_layer_dim=None):
         self.img_embedding_shape = img_embedding_shape
         self.max_caption_len = max_caption_len
         self.vocab_size = vocab_size
@@ -28,6 +30,7 @@ class E2eModel(object):
         self.recurrent_dropout = recurrent_dropout
         self.image_pooling = image_pooling
         self.mask_zeros = mask_zeros
+        self.num_lstm_layers = num_lstm_layers
         self.additional_dense_layer_dim = additional_dense_layer_dim
 
         self.image_model = cnn_model(
@@ -82,8 +85,9 @@ class E2eModel(object):
 
     def _build_seq_output(self, sequence_input):
         x = TimeDistributed(BatchNormalization(axis=-1))(sequence_input)
-        x = LSTM(units=self.lstm_units, return_sequences=True,
-                 dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
+        for _ in range(self.num_lstm_layers):
+            x = LSTM(units=self.lstm_units, return_sequences=True,
+                     dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
         if self.additional_dense_layer_dim:
             x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu'))(x)
         time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
