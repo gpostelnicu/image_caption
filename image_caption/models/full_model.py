@@ -133,7 +133,7 @@ class ImageFirstE2EModel(E2eModel):
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
         model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=5.0),
-                      loss='sparse_categorical_cross_entropy', sample_weight_mode='temporal')
+                      loss='sparse_categorical_crossentropy', sample_weight_mode='temporal')
         model.summary()
         return model
 
