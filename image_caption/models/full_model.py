@@ -121,7 +121,7 @@ class ImageFirstE2EModel(E2eModel):
             transformed_img = Dropout(self.cnn_dropout)(transformed_img)
         tt_img = RepeatVector(1)(transformed_img)
 
-        word_input, word_model = self._word_model(self.max_caption_len - 1)
+        word_input, word_model = self._word_model(self.max_caption_len)
         if self.text_dropout > 0:
             word_model = Dropout(self.text_dropout)(word_model)
 
