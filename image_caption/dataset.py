@@ -158,7 +158,7 @@ class Flickr8kImageSequence(Sequence):
             padding='post'
         )
         out_captions = sequence.pad_sequences(
-            out_captions, self.max_length + 1, padding='post', value=-1
+            out_captions, self.max_length + 1, padding='post', value=0
         )
         outputs = np.expand_dims(out_captions, axis=-1)
         outputs -= 1

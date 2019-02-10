@@ -103,7 +103,7 @@ class E2eModel(object):
         if self.additional_dense_layer_dim:
             x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu',
                                       kernel_initializer='he_normal'))(x)
-        time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
+        time_dist_dense = TimeDistributed(Dense(self.vocab_size))(x)
         return time_dist_dense
 
 
