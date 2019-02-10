@@ -222,8 +222,9 @@ class ImageFirstE2ETrainer(E2ETrainer):
     def train(self,
               images_dir,
               embedding_dim,
-              train_captions_path,
-              test_captions_path,
+              captions_path,
+              train_imids_path,
+              test_imids_path,
               output_prefix,
               num_epochs,
               batch_size,
@@ -231,8 +232,9 @@ class ImageFirstE2ETrainer(E2ETrainer):
               checkpoint_prefix=None
               ):
         tok, train_seq, test_seq = self.prepare_data(
-            images_dir=images_dir, train_captions_path=train_captions_path, test_captions_path=test_captions_path,
-            checkpoint_prefix=checkpoint_prefix, output_prefix=output_prefix, batch_size=batch_size
+            images_dir=images_dir, captions_path=captions_path, train_imids_path=train_imids_path,
+            test_imids_path=test_imids_path, checkpoint_prefix=checkpoint_prefix, output_prefix=output_prefix,
+            batch_size=batch_size
         )
 
         special_tokens = ['starttoken', 'endtoken', 'unk']
