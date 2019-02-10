@@ -131,7 +131,7 @@ class Flickr8kImageSequence(Sequence):
             lst[i] = [np.random.randint(1, self.max_vocab_size - 1)]
 
     def _batch_captions(self, batch_idx):
-        captions = [self.tok.texts_to_sequences(self.ds[idx][1] for idx in batch_idx)]
+        captions = self.tok.texts_to_sequences(self.ds[idx][1] for idx in batch_idx)
         out_captions = copy.copy(captions)
 
         if self.replace_words_ratio > 0:
@@ -141,7 +141,9 @@ class Flickr8kImageSequence(Sequence):
         if self.start_token_idx is not None:
             captions = [[self.start_token_idx] + cap for cap in captions]
 
-        out_captions = [cap.append(self.end_token_idx) for cap in out_captions]
+        for cap in out_captions:
+            cap.append(self.end_token_idx)
+
         return captions, out_captions
 
     def __getitem__(self, item):
