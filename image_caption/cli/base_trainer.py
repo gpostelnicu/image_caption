@@ -1,5 +1,7 @@
 import logging
+import os
 import pickle
+import shutil
 
 import fire
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, LearningRateScheduler
@@ -113,6 +115,10 @@ class E2ETrainer(object):
                 return lr / self.lr_factor
             return lr
 
+        logs_dir = '{}_logs'.format(output_prefix)
+        if os.path.exists(logs_dir):
+            logging.info("Deleting logs dir {}".format(logs_dir))
+            shutil.rmtree(logs_dir)
         callbacks = [
             ModelCheckpoint(out_model, save_best_only=True),
             EarlyStopping(patience=self.train_patience),
