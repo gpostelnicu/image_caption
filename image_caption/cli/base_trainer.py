@@ -135,7 +135,6 @@ class E2ETrainer(object):
         idx += 1
 
         for word in words:
-            assert word not in tok.word_index, word
             tok.index_word[idx] = word
             tok.word_index[word] = idx
             idx += 1
