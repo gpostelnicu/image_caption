@@ -128,7 +128,7 @@ class Flickr8kImageSequence(Sequence):
     def _random_replace(self, lst):
         rand_idx = np.random.choice(len(lst), int(self.replace_words_ratio * len(lst)), replace=False)
         for i in rand_idx:
-            lst[i] = [np.random.randint(1, self.max_vocab_size - 1)]
+            lst[i] = np.random.randint(1, self.max_vocab_size - 1)
 
     def _batch_captions(self, batch_idx):
         captions = self.tok.texts_to_sequences(self.ds[idx][1] for idx in batch_idx)
@@ -158,7 +158,7 @@ class Flickr8kImageSequence(Sequence):
             padding='post'
         )
         out_captions = sequence.pad_sequences(
-            in_captions, self.max_length + 1, padding='post'
+            out_captions, self.max_length + 1, padding='post'
         )
         one_hot = map(self.tok.sequences_to_matrix, np.expand_dims(out_captions, axis=-1))
         one_hot = np.array(one_hot, dtype='int')
@@ -166,7 +166,7 @@ class Flickr8kImageSequence(Sequence):
         # Ignore padding in the loss function - shift word index by 1.
         one_hot_shifted = one_hot[:, :, 1:]
 
-        ret = [[images, out_captions], one_hot_shifted]
+        ret = [[images, in_captions], one_hot_shifted]
         if self.output_weights:
             batch_weights = np.where(out_captions > 0,
                                      np.ones(out_captions.shape, dtype=np.float32),
