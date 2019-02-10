@@ -73,7 +73,7 @@ class E2eModel(object):
         x = BatchNormalization(axis=-1)(x)
         if self.img_dense_dim > 0:
             logging.info("Adding image dense layer with units: {}".format(self.img_dense_dim))
-            x = Dense(self.img_dense_dim, activation='relu')(x)
+            x = Dense(self.img_dense_dim, activation='relu', kernel_initializer='he_normal')(x)
 
         return self.image_model.input, x
 
@@ -82,6 +82,7 @@ class E2eModel(object):
         if self.text_embedding_matrix is not None:
             embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
                                   input_length=seq_len, trainable=self.text_embedding_trainable,
+                                  embeddings_initializer='he_normal',
                                   mask_zero=self.mask_zeros)(word_input)
         else:
             logging.info("Empty embeddings weights")
