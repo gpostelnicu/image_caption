@@ -3,7 +3,7 @@ import logging
 from keras.models import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, \
     Flatten, Dropout, Input
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, SGD
 import tensorflow as tf
 
 
@@ -132,7 +132,7 @@ class ImageFirstE2EModel(E2eModel):
 
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
-        model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=5.0),
+        model.compile(optimizer=SGD(lr=self.learning_rate, clipnorm=5.0),
                       loss='sparse_categorical_crossentropy', sample_weight_mode='temporal')
         model.summary()
         return model
