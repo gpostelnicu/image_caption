@@ -242,13 +242,12 @@ class ImageFirstE2ETrainer(E2ETrainer):
               embeddings_path=None,
               checkpoint_prefix=None
               ):
+        special_tokens = ['starttoken', 'endtoken', 'unk']
         tok, train_seq, test_seq = self.prepare_data(
             images_dir=images_dir, captions_path=captions_path, train_imids_path=train_imids_path,
             test_imids_path=test_imids_path, checkpoint_prefix=checkpoint_prefix, output_prefix=output_prefix,
-            batch_size=batch_size
+            batch_size=batch_size, special_tokens=special_tokens
         )
-
-        special_tokens = ['starttoken', 'endtoken', 'unk']
 
         embedding_matrix = None
         if embeddings_path:
