@@ -55,16 +55,17 @@ class E2ETrainer(object):
 
     def prepare_data(self,
                      images_dir,
-                     train_captions_path,
-                     test_captions_path,
+                     captions_path,
+                     train_imids_path,
+                     test_imids_path,
                      checkpoint_prefix,
                      output_prefix,
                      batch_size
                      ):
         logging.info("Loading Flickr8K train dataset.")
-        train_flkr = Flickr8kDataset(captions_path=train_captions_path)
+        train_flkr = Flickr8kDataset(captions_path=captions_path, imids_path=train_imids_path)
         logging.info("Loaded train dataset. Number of samples: {}.".format(len(train_flkr.captions)))
-        test_flkr = Flickr8kDataset(captions_path=test_captions_path)
+        test_flkr = Flickr8kDataset(captions_path=captions_path, imids_path=test_imids_path)
         logging.info("Loaded test dataset. Number of samples: {}.".format(len(test_flkr.captions)))
 
         if checkpoint_prefix is not None:
@@ -132,16 +133,18 @@ class E2ETrainer(object):
               images_dir,
               embeddings_path,
               embedding_dim,
-              train_captions_path,
-              test_captions_path,
+              captions_path,
+              train_imids_path,
+              test_imids_path,
               output_prefix,
               num_epochs,
               batch_size,
               checkpoint_prefix=None
               ):
         tok, train_seq, test_seq = self.prepare_data(
-            images_dir=images_dir, train_captions_path=train_captions_path, test_captions_path=test_captions_path,
-            checkpoint_prefix=checkpoint_prefix, output_prefix=output_prefix, batch_size=batch_size
+            images_dir=images_dir, captions_path=captions_path, train_imids_path=train_imids_path,
+            test_imids_path=test_imids_path, checkpoint_prefix=checkpoint_prefix,
+            output_prefix=output_prefix, batch_size=batch_size
         )
 
         special_tokens = ['starttoken', 'endtoken']
