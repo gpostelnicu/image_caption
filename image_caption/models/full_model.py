@@ -1,9 +1,9 @@
 import logging
 
 from keras.models import Model
-from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, Input, \
-    Flatten, Dropout
-from keras.optimizers import Adam, RMSprop
+from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, \
+    Flatten, Dropout, Input
+from keras.optimizers import RMSprop
 import tensorflow as tf
 
 
@@ -95,7 +95,9 @@ class E2eModel(object):
         for _ in range(self.num_lstm_layers):
             x = BatchNormalization(axis=-1)(x)
             x = LSTM(units=self.lstm_units, return_sequences=True,
-                     dropout=self.dropout, recurrent_dropout=self.recurrent_dropout)(x)
+                     kernel_initializer='he_normal',
+                     dropout=self.dropout,
+                     recurrent_dropout=self.recurrent_dropout)(x)
 
         if self.additional_dense_layer_dim:
             x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu'))(x)

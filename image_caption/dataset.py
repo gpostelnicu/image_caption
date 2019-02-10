@@ -1,3 +1,4 @@
+import copy
 import csv
 import logging
 import os
@@ -13,23 +14,51 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing.text import text_to_word_sequence
 from keras.utils import Sequence, to_categorical
 
+from image_caption.utils import cleanup_caption
+
 
 class Flickr8kDataset(object):
-    def __init__(self, captions_path):
-        self.captions, self.image_ids = self._load_captions(captions_path)
-        self.max_length = max(len(cap) for cap in self.captions)
+    def __init__(self, captions_path, imids_path):
+        imids = set(Flickr8kDataset._read_image_ids(imids_path))
+        self.captions = Flickr8kDataset._read_captions(captions_path, imids)
+        self.max_caption_length = self._compute_max_captions_length()
+
+    def _compute_max_captions_length(self):
+        max_len = 0
+        for captions in self.captions.values():
+            buf = max(len(cap.split()) for cap in captions)
+            max_len = max(buf, max_len)
+        return max_len
+
+    def as_list(self):
+        return list(self)
+
+    @staticmethod
+    def _read_captions(captions_path, imids):
+        captions = defaultdict(list)
+        with open(captions_path) as csvfile:
+            reader = csv.reader(csvfile, delimiter='\t')
+            for row in reader:
+                imid = row[0]
+                imid = imid[:len(imid) - 2]  # Strip annotation number
+                caption = row[1]
+                if imid in imids:
+                    clean_caption = cleanup_caption(caption)
+                    captions[imid].append(clean_caption)
+        return captions
 
     def __len__(self):
-        return len(self.captions)
+        return sum([len(captions) for captions in self.captions.values()])
 
     def __iter__(self):
-        yield from zip(self.image_ids, self.captions)
+        for imid, captions in self.captions.items():
+            for caption in captions:
+                yield (imid, caption)
 
-    def image_id_map(self):
-        by_id = defaultdict(list)
-        for imid, caption in self:
-            by_id[imid].append(caption)
-        return by_id
+    @staticmethod
+    def _read_image_ids(imids_path):
+        imids = open(imids_path).read().split('\n')[:-1]
+        return imids
 
     @staticmethod
     def _load_captions(captions_path):
@@ -46,16 +75,23 @@ class Flickr8kDataset(object):
 class Flickr8kImageSequence(Sequence):
     def __init__(self, flickr_dataset, images_dir, batch_size,
                  tokenizer, image_preprocess_fn, max_length=None, random_image_transform=False,
-                 replace_words_ratio=0.0, output_weights=False, captions_start_idx=0):
-        self.ds = flickr_dataset
+                 replace_words_ratio=0.0, output_weights=False, start_token=None, end_token='endtoken'):
+        self.ds = flickr_dataset.as_list()
         self.images_dir = images_dir
         self.batch_size = batch_size
         self.tok = tokenizer
-        self.max_length = max_length
+        self.max_length = max_length + 1
         self.max_vocab_size = 1 + len(self.tok.index_word)
-        self.image_preprocess_fn = image_preprocess_fn
-        self.captions_start_idx = captions_start_idx
 
+        self.start_token_idx = None
+        if start_token is not None:
+            self.start_token_idx = self.tok[start_token]
+            self.max_length += 1
+
+        self.end_token_idx = self.tok[end_token]
+        self.replace_words_ratio = replace_words_ratio
+
+        self.image_preprocess_fn = image_preprocess_fn
         if random_image_transform:
             self.datagen = ImageDataGenerator(
                 rotation_range=2.,
@@ -67,7 +103,6 @@ class Flickr8kImageSequence(Sequence):
         else:
             self.datagen = None
 
-        self.replace_words_ratio = replace_words_ratio
         self.output_weights = output_weights
 
         # Indices for random shuffle.
@@ -79,64 +114,70 @@ class Flickr8kImageSequence(Sequence):
     def on_epoch_end(self):
         random.shuffle(self.idx)
 
-    def __getitem__(self, item):
-        batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
-
+    def _batch_images(self, batch_idx):
         image_paths = [os.path.join(self.images_dir, self.ds.image_ids[i]) for i in batch_idx]
         images = [self._read_img(ip) for ip in image_paths]
         if self.datagen is not None:
             images = [self.datagen.random_transform(im) for im in images]
+
         images = np.stack(images)
         norm_images = self.image_preprocess_fn(images)
         norm_images = np.asarray(norm_images)
+        return norm_images
 
-        captions = [self.tok.texts_to_sequences(self.ds.captions[idx]) for idx in batch_idx]
+    def _random_replace(self, lst):
+        rand_idx = np.random.choice(len(lst), int(self.replace_words_ratio * len(lst)), replace=False)
+        for i in rand_idx:
+            lst[i] = [np.random.randint(1, self.max_vocab_size - 1)]
 
-        partial_captions = [c[self.captions_start_idx:-1] for c in captions]
+    def _batch_captions(self, batch_idx):
+        captions = [self.tok.texts_to_sequences(self.ds.captions[idx] for idx in batch_idx)]
+        out_captions = copy.copy(captions)
+
         if self.replace_words_ratio > 0:
-            def random_replace(lst):
-                rand_idx = np.random.choice(len(lst), int(self.replace_words_ratio * len(lst)), replace=False)
-                for i in rand_idx:
-                    lst[i] = [np.random.randint(1, self.max_vocab_size - 1)]
+            for pc in captions:
+                self._random_replace(pc)
 
-            for pc in partial_captions:
-                random_replace(pc)
-        partial_captions = sequence.pad_sequences(partial_captions,
-                                                  maxlen=self.max_length - self.captions_start_idx,
-                                                  padding='post')
-        partial_captions = np.squeeze(partial_captions)
+        if self.start_token_idx is not None:
+            captions = [[self.start_token_idx] + cap for cap in captions]
 
-        outputs = []
+        out_captions = [cap.append(self.end_token_idx) for cap in out_captions]
+        return captions, out_captions
+
+    def __getitem__(self, item):
+        batch_idx = self.idx[self.batch_size * item:(item + 1) * self.batch_size]
+
+        images = self._batch_images(batch_idx)
+        captions, out_captions = self._batch_captions(batch_idx)
+
+        in_captions = sequence.pad_sequences(
+            captions,
+            self.max_length + (1 if self.start_token_idx else 0),
+            padding='post'
+        )
+        out_captions = sequence.pad_sequences(
+            in_captions, self.max_length + 1, padding='post'
+        )
+        one_hot = map(self.tok.sequences_to_matrix, np.expand_dims(out_captions, axis=-1))
+        one_hot = np.array(one_hot, dtype='int')
+
+        # Ignore padding in the loss function - shift word index by 1.
+        one_hot_shifted = one_hot[:, :, 1:]
+
+        ret = [[images, out_captions], one_hot_shifted]
         if self.output_weights:
-            batch_weights = []
+            batch_weights = np.where(out_captions > 0,
+                                     np.ones(out_captions.shape, dtype=np.float32),
+                                     np.zeros(out_captions.shape, dtype=np.float32))
+            ret.append(batch_weights)
 
-        for caption in captions:
-            pred = np.zeros((self.max_length, self.max_vocab_size))
-            for i, n in enumerate(caption[1:]):
-                pred[i, n] = 1.
-
-            outputs.append(pred)
-
-            if self.output_weights:
-                output_len = len(caption) - 1
-                w = np.concatenate(
-                    (np.ones((output_len,)),
-                     np.zeros(self.max_length - output_len,)))
-                batch_weights.append(w)
-
-        outputs = np.asarray(outputs)
-        if self.output_weights:
-            batch_weights = np.asarray(batch_weights)
-            return [[norm_images, partial_captions], outputs, batch_weights]
-        else:
-            return [[norm_images, partial_captions], outputs]
+        return ret
 
     @lru_cache(maxsize=30000)
     def _read_img(self, im_path):
         im = image.load_img(im_path, target_size=(224, 224))
         x = image.img_to_array(im)
         return x
-
 
 
 class Flickr8kEncodedSequence(Sequence):
@@ -272,7 +313,6 @@ class Flickr8kNextWordSequence(Sequence):
         im = image.load_img(im_path, target_size=(224, 224))
         x = image.img_to_array(im)
         return x
-
 
 
 class Flickr8KSequence(Sequence):

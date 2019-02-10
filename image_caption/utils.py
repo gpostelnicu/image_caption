@@ -94,3 +94,4 @@ def filter_tokenizer(tok, min_docs_per_word=5):
     tok.word_index = dict([(w, i + 1) for i, w in enumerate(words_to_keep)])
     tok.index_word = {v:k for k, v in tok.word_index.items()}
 
+
