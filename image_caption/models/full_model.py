@@ -101,8 +101,9 @@ class E2eModel(object):
                      recurrent_dropout=self.recurrent_dropout)(x)
 
         if self.additional_dense_layer_dim:
-            x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu'))(x)
-        time_dist_dense = TimeDistributed(Dense(self.vocab_size))(x)
+            x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu',
+                                      kernel_initializer='he_normal'))(x)
+        time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
         return time_dist_dense
 
 
@@ -131,8 +132,8 @@ class ImageFirstE2EModel(E2eModel):
 
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
-        model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=1.0),
-                      loss=softmax_cross_entropy_with_logits, sample_weight_mode='temporal')
+        model.compile(optimizer=RMSprop(lr=self.learning_rate, clipnorm=5.0),
+                      loss='sparse_categorical_cross_entropy', sample_weight_mode='temporal')
         model.summary()
         return model
 
