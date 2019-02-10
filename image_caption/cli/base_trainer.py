@@ -88,7 +88,7 @@ class E2ETrainer(object):
             logging.info('Writing tokenizer file to file {}'.format(output_path))
             pickle.dump(tok, open(output_path, 'wb'))
 
-        max_num_words = max(len(tok.texts_to_sequences(cap)) for _, cap in train_flkr)
+        max_num_words = max(len(s) for s in tok.texts_to_sequences(cap for _, cap in train_flkr))
         logging.info("Setting max_len to be : {}".format(max_num_words))
         train_seq = Flickr8kImageSequence(
             train_flkr, images_dir, batch_size, tok,
