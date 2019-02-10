@@ -88,7 +88,7 @@ class Flickr8kImageSequence(Sequence):
             self.start_token_idx = self.tok[start_token]
             self.max_length += 1
 
-        self.end_token_idx = self.tok[end_token]
+        self.end_token_idx = self.tok.word_index[end_token]
         self.replace_words_ratio = replace_words_ratio
 
         self.image_preprocess_fn = image_preprocess_fn
