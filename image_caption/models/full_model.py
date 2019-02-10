@@ -103,7 +103,7 @@ class E2eModel(object):
         if self.additional_dense_layer_dim:
             x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu',
                                       kernel_initializer='he_normal'))(x)
-        time_dist_dense = TimeDistributed(Dense(self.vocab_size))(x)
+        time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
         return time_dist_dense
 
 
@@ -133,7 +133,7 @@ class ImageFirstE2EModel(E2eModel):
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
         model.compile(optimizer=SGD(lr=self.learning_rate, clipnorm=5.0),
-                      loss='sparse_categorical_crossentropy', sample_weight_mode='temporal')
+                      loss='categorical_crossentropy', sample_weight_mode='temporal')
         model.summary()
         return model
 
