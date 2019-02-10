@@ -64,9 +64,9 @@ class E2ETrainer(object):
                      ):
         logging.info("Loading Flickr8K train dataset.")
         train_flkr = Flickr8kDataset(captions_path=captions_path, imids_path=train_imids_path)
-        logging.info("Loaded train dataset. Number of samples: {}.".format(len(train_flkr.captions)))
+        logging.info("Loaded train dataset. Number of samples: {}.".format(len(train_flkr)))
         test_flkr = Flickr8kDataset(captions_path=captions_path, imids_path=test_imids_path)
-        logging.info("Loaded test dataset. Number of samples: {}.".format(len(test_flkr.captions)))
+        logging.info("Loaded test dataset. Number of samples: {}.".format(len(test_flkr)))
 
         if checkpoint_prefix is not None:
             tok_path = '{}_tok.pkl'.format(checkpoint_prefix)
@@ -127,6 +127,16 @@ class E2ETrainer(object):
             callbacks=callbacks
         )
 
+    def add_words(self, tok, words):
+        idx = max(tok.index_word.keys())
+        idx += 1
+
+        for word in words:
+            assert word not in tok.word_index, word
+            tok.index_word[idx] = word
+            tok.word_index[word] = idx
+            idx += 1
+
     def train(self,
               images_dir,
               embeddings_path,
@@ -146,6 +156,8 @@ class E2ETrainer(object):
         )
 
         special_tokens = ['starttoken', 'endtoken']
+        self.add_words(tok, special_tokens)
+
         embeddings = load_fasttext(embeddings_path)
         embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
                                                    special_tokens=special_tokens)
