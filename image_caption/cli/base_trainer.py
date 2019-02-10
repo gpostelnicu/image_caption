@@ -90,14 +90,12 @@ class E2ETrainer(object):
             train_flkr, images_dir, batch_size, tok,
             max_length=max_num_words,
             image_preprocess_fn=self.cnn_arch.preprocess_fn, random_image_transform=True,
-            replace_words_ratio=self.replace_words_ratio, output_weights=self.use_sample_weights,
-            captions_start_idx=self.captions_start_idx
+            replace_words_ratio=self.replace_words_ratio, output_weights=self.use_sample_weights
         )
         logging.info("Number of train steps: {}".format(len(train_seq)))
         test_seq = Flickr8kImageSequence(
             test_flkr, images_dir, batch_size, tok, max_length=max_num_words,
-            image_preprocess_fn=self.cnn_arch.preprocess_fn, output_weights=self.use_sample_weights,
-            captions_start_idx=self.captions_start_idx
+            image_preprocess_fn=self.cnn_arch.preprocess_fn, output_weights=self.use_sample_weights
         )
         logging.info("Number of test steps: {}.".format(len(test_seq)))
 
