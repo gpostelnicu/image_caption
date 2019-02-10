@@ -60,7 +60,8 @@ class E2ETrainer(object):
                      test_imids_path,
                      checkpoint_prefix,
                      output_prefix,
-                     batch_size
+                     batch_size,
+                     special_tokens
                      ):
         logging.info("Loading Flickr8K train dataset.")
         train_flkr = Flickr8kDataset(captions_path=captions_path, imids_path=train_imids_path)
@@ -76,6 +77,8 @@ class E2ETrainer(object):
             logging.info("Generating tokenizer.")
             tok = Tokenizer(oov_token='unk')
             tok.fit_on_texts(cap for _, cap in train_flkr)
+            self.add_words(tok, special_tokens)
+
             # Remove words that appear in less than 5 documents.
             filter_tokenizer(tok, 5)
             logging.info('Words in tokenizer: {}'.format(len(tok.word_index)))
@@ -149,14 +152,12 @@ class E2ETrainer(object):
               batch_size,
               checkpoint_prefix=None
               ):
+        special_tokens = ['starttoken', 'endtoken']
         tok, train_seq, test_seq = self.prepare_data(
             images_dir=images_dir, captions_path=captions_path, train_imids_path=train_imids_path,
             test_imids_path=test_imids_path, checkpoint_prefix=checkpoint_prefix,
-            output_prefix=output_prefix, batch_size=batch_size
+            output_prefix=output_prefix, batch_size=batch_size, special_tokens=special_tokens
         )
-
-        special_tokens = ['starttoken', 'endtoken']
-        self.add_words(tok, special_tokens)
 
         embeddings = load_fasttext(embeddings_path)
         embedding_matrix = create_embedding_matrix(tok.word_index, embeddings, embedding_dim,
