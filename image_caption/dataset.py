@@ -115,7 +115,7 @@ class Flickr8kImageSequence(Sequence):
         random.shuffle(self.idx)
 
     def _batch_images(self, batch_idx):
-        image_paths = [os.path.join(self.images_dir, self.ds.image_ids[i]) for i in batch_idx]
+        image_paths = [os.path.join(self.images_dir, self.ds[i][0]) for i in batch_idx]
         images = [self._read_img(ip) for ip in image_paths]
         if self.datagen is not None:
             images = [self.datagen.random_transform(im) for im in images]
@@ -131,7 +131,7 @@ class Flickr8kImageSequence(Sequence):
             lst[i] = [np.random.randint(1, self.max_vocab_size - 1)]
 
     def _batch_captions(self, batch_idx):
-        captions = [self.tok.texts_to_sequences(self.ds.captions[idx] for idx in batch_idx)]
+        captions = [self.tok.texts_to_sequences(self.ds[idx][1] for idx in batch_idx)]
         out_captions = copy.copy(captions)
 
         if self.replace_words_ratio > 0:
