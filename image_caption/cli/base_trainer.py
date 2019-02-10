@@ -75,7 +75,7 @@ class E2ETrainer(object):
             tok = pickle.load(open(tok_path, 'rb'))
         else:
             logging.info("Generating tokenizer.")
-            tok = Tokenizer(oov_token='unk')
+            tok = Tokenizer(oov_token='unknowntoken')
             tok.fit_on_texts(cap for _, cap in train_flkr)
             self.add_words(tok, special_tokens)
 
@@ -242,7 +242,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
               embeddings_path=None,
               checkpoint_prefix=None
               ):
-        special_tokens = ['starttoken', 'endtoken', 'unk']
+        special_tokens = ['starttoken', 'endtoken', 'unknowntoken']
         tok, train_seq, test_seq = self.prepare_data(
             images_dir=images_dir, captions_path=captions_path, train_imids_path=train_imids_path,
             test_imids_path=test_imids_path, checkpoint_prefix=checkpoint_prefix, output_prefix=output_prefix,
