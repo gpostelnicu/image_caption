@@ -77,10 +77,11 @@ class E2ETrainer(object):
             logging.info("Generating tokenizer.")
             tok = Tokenizer(oov_token='unknowntoken')
             tok.fit_on_texts(cap for _, cap in train_flkr)
-            self.add_words(tok, special_tokens)
-
             # Remove words that appear in less than 5 documents.
             filter_tokenizer(tok, 5)
+
+            self.add_words(tok, special_tokens)
+
             logging.info('Words in tokenizer: {}'.format(len(tok.word_index)))
 
             output_path = '{}_tok.pkl'.format(output_prefix)
