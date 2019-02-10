@@ -85,17 +85,18 @@ class E2ETrainer(object):
             logging.info('Writing tokenizer file to file {}'.format(output_path))
             pickle.dump(tok, open(output_path, 'wb'))
 
-        logging.info("Setting max_len to be : {}".format(train_flkr.max_length))
+        max_num_words = max(len(tok.texts_to_sequences(cap)) for _, cap in train_flkr)
+        logging.info("Setting max_len to be : {}".format(max_num_words))
         train_seq = Flickr8kImageSequence(
             train_flkr, images_dir, batch_size, tok,
-            max_length=train_flkr.max_length,
+            max_length=max_num_words,
             image_preprocess_fn=self.cnn_arch.preprocess_fn, random_image_transform=True,
             replace_words_ratio=self.replace_words_ratio, output_weights=self.use_sample_weights,
             captions_start_idx=self.captions_start_idx
         )
         logging.info("Number of train steps: {}".format(len(train_seq)))
         test_seq = Flickr8kImageSequence(
-            test_flkr, images_dir, batch_size, tok, max_length=train_flkr.max_length,
+            test_flkr, images_dir, batch_size, tok, max_length=max_num_words,
             image_preprocess_fn=self.cnn_arch.preprocess_fn, output_weights=self.use_sample_weights,
             captions_start_idx=self.captions_start_idx
         )
