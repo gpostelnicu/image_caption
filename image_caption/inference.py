@@ -31,7 +31,7 @@ class WordInference(object):
         while True:
             inputs = self._encode_partial_caption(partial_cap, im_arr)
             preds = self.model.predict(inputs)
-            pred_idx = np.argmax(preds, axis=-1)[0]
+            pred_idx = np.argmax(preds, axis=-1)[0][0]
             pred_word = self.tok.index_word[pred_idx + 1]  # Shift by 1 (works for Flickr8kImageSequence)
             if pred_word == EOS_TOKEN or len(partial_cap) == self.max_cap_len:
                 break
