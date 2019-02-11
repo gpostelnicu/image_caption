@@ -124,6 +124,10 @@ class ImageFirstE2EModel(E2eModel):
         super().__init__(**kwargs)  # Calls _build_model
         assert self.img_dense_dim == self.embedding_dim
 
+    def compile(self, model):
+        model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=5.0),
+                      loss='categorical_crossentropy', sample_weight_mode='temporal')
+
     def _build_model(self):
         img_input, img_model = self._image_model()
 
@@ -141,8 +145,7 @@ class ImageFirstE2EModel(E2eModel):
 
         model = Model(inputs=[img_input, word_input],
                       outputs=seq_output)
-        model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=5.0),
-                      loss='categorical_crossentropy', sample_weight_mode='temporal')
+        self.compile(model)
         model.summary()
         return model
 

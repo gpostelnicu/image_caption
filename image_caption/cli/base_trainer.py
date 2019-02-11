@@ -286,5 +286,6 @@ class ImageFirstE2ETrainer(E2ETrainer):
             model_path = '{}_model.h5'.format(checkpoint_prefix)
             logging.info("Loading model from checkpoint {}".format(model_path))
             model.keras_model.load_weights(model_path)
+            model.compile(model.keras_model)
 
         self.do_train(model, train_seq, test_seq, output_prefix, num_epochs)
