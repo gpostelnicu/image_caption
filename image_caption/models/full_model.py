@@ -2,8 +2,8 @@ import logging
 
 from keras.models import Model
 from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistributed, BatchNormalization, LSTM, \
-    Flatten, Dropout, Input
-from keras.optimizers import RMSprop, SGD, Adam
+    Flatten, Dropout, Input, PReLU
+from keras.optimizers import RMSprop, Adam
 import tensorflow as tf
 from keras.regularizers import l1_l2
 
@@ -75,9 +75,9 @@ class E2eModel(object):
         if self.img_dense_dim > 0:
             logging.info("Adding image dense layer with units: {}".format(self.img_dense_dim))
             x = Dense(self.img_dense_dim,
-                      activation='prelu',
                       kernel_regularizer=l1_l2(1e-7, 1e-7),
                       kernel_initializer='he_normal')(x)
+            x = PReLU()(x)
 
         return self.image_model.input, x
 
@@ -107,8 +107,8 @@ class E2eModel(object):
                      recurrent_dropout=self.recurrent_dropout)(x)
 
         if self.additional_dense_layer_dim:
-            x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='prelu',
-                                      kernel_initializer='he_normal'))(x)
+            x = TimeDistributed(Dense(self.additional_dense_layer_dim, kernel_initializer='he_normal'))(x)
+            x = TimeDistributed(PReLU())(x)
         time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
         return time_dist_dense
 
