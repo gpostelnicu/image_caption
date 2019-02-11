@@ -5,6 +5,7 @@ from keras.layers import concatenate, Dense, RepeatVector, Embedding, TimeDistri
     Flatten, Dropout, Input
 from keras.optimizers import RMSprop, SGD, Adam
 import tensorflow as tf
+from keras.regularizers import l1_l2
 
 
 def softmax_cross_entropy_with_logits(y_true, y_pred):
@@ -73,7 +74,10 @@ class E2eModel(object):
         x = BatchNormalization(axis=-1)(x)
         if self.img_dense_dim > 0:
             logging.info("Adding image dense layer with units: {}".format(self.img_dense_dim))
-            x = Dense(self.img_dense_dim, activation='relu', kernel_initializer='he_normal')(x)
+            x = Dense(self.img_dense_dim,
+                      activation='prelu',
+                      kernel_regularizer=l1_l2(1e-7, 1e-7),
+                      kernel_initializer='he_normal')(x)
 
         return self.image_model.input, x
 
@@ -88,6 +92,8 @@ class E2eModel(object):
             logging.info("Empty embeddings weights")
             embedding = Embedding(self.vocab_size, self.embedding_dim,
                                   input_length=seq_len, trainable=True,
+                                  embeddings_initializer='he_normal',
+                                  embeddings_regularizer=l1_l2(1e-7, 1e-7),
                                   mask_zero=self.mask_zeros)(word_input)
         return word_input, embedding
 
@@ -101,7 +107,7 @@ class E2eModel(object):
                      recurrent_dropout=self.recurrent_dropout)(x)
 
         if self.additional_dense_layer_dim:
-            x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='relu',
+            x = TimeDistributed(Dense(self.additional_dense_layer_dim, activation='prelu',
                                       kernel_initializer='he_normal'))(x)
         time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
         return time_dist_dense
@@ -111,6 +117,9 @@ class ImageFirstE2EModel(E2eModel):
     def __init__(self, cnn_dropout, text_dropout, **kwargs):
         self.cnn_dropout = cnn_dropout
         self.text_dropout = text_dropout
+
+        logging.info('Forcing extra dense layer for images to match embedding size.')
+        kwargs['img_dense_dim'] = kwargs['embedding_dim']
 
         super().__init__(**kwargs)  # Calls _build_model
         assert self.img_dense_dim == self.embedding_dim
