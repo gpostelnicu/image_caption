@@ -18,12 +18,12 @@ class WordInference(object):
         input_text = sequence.pad_sequences(input_text, maxlen=self.max_cap_len, padding='post')
         return [np.array([im_arr]), input_text]
 
-    def process_image(self, im_path=None, im=None):
+    def process_image(self, im_path=None, im_arr=None):
         if im_path is not None:
             im = image.load_img(im_path, target_size=self.target_size)
             im_arr = image.img_to_array(im)
         else:
-            assert im is not None
+            assert im_arr is not None
 
         partial_cap = []
         EOS_TOKEN = 'endtoken'
