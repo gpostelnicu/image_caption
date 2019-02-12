@@ -132,7 +132,7 @@ class Flickr8kImageSequence(Sequence):
 
     def _batch_captions(self, batch_idx):
         captions = self.tok.texts_to_sequences(self.ds[idx][1] for idx in batch_idx)
-        out_captions = copy.copy(captions)
+        out_captions = copy.deepcopy(captions)
 
         if self.replace_words_ratio > 0:
             for pc in captions:
@@ -157,11 +157,13 @@ class Flickr8kImageSequence(Sequence):
             self.max_length + (1 if self.start_token_idx else 0),
             padding='post'
         )
+
         out_captions = sequence.pad_sequences(
             out_captions, self.max_length + 1, padding='post'
         )
         x = np.expand_dims(out_captions, axis=-1)
         one_hot = to_categorical(x, num_classes=1 + len(self.tok.word_index))
+        one_hot *= [0] + [1] * len(self.tok.word_index)  # Ignore padding token (0).
 
         # Ignore padding in the loss function - shift word index by 1.
         outputs = one_hot[:, :, 1:]
