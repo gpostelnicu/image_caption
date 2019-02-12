@@ -264,7 +264,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
         model = ImageFirstE2EModel(
             cnn_dropout=self.cnn_dropout,
             text_dropout=self.text_dropout,
-            img_embedding_shape=(224, 224, 3),
+            img_embedding_shape=(299, 299, 3),
             text_embedding_matrix=embedding_matrix,
             max_caption_len=train_seq.max_length,
             vocab_size=len(tok.index_word),
