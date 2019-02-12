@@ -93,13 +93,13 @@ class Flickr8kImageSequence(Sequence):
 
         self.image_preprocess_fn = image_preprocess_fn
         if random_image_transform:
-            self.datagen = ImageDataGenerator(
-                rotation_range=2.,
-                zoom_range=.02,
-                brightness_range=[.8, 1.2],
-                width_shift_range=0.1,
-                height_shift_range=0.1
-            )
+            self.datagen = ImageDataGenerator(rotation_range=40,
+                                              width_shift_range=0.2,
+                                              height_shift_range=0.2,
+                                              shear_range=0.2,
+                                              zoom_range=0.2,
+                                              horizontal_flip=True,
+                                              fill_mode='nearest')
         else:
             self.datagen = None
 
