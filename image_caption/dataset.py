@@ -178,7 +178,7 @@ class Flickr8kImageSequence(Sequence):
 
     @lru_cache(maxsize=30000)
     def _read_img(self, im_path):
-        im = image.load_img(im_path, target_size=(224, 224))
+        im = image.load_img(im_path, target_size=(299, 299))
         x = image.img_to_array(im)
         return x
 
