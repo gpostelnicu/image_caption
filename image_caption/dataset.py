@@ -163,7 +163,6 @@ class Flickr8kImageSequence(Sequence):
         )
         x = np.expand_dims(out_captions, axis=-1)
         one_hot = to_categorical(x, num_classes=1 + len(self.tok.word_index))
-        one_hot *= [0] + [1] * len(self.tok.word_index)  # Ignore padding token (0).
 
         # Ignore padding in the loss function - shift word index by 1.
         outputs = one_hot[:, :, 1:]

@@ -86,13 +86,11 @@ class E2eModel(object):
         if self.text_embedding_matrix is not None:
             embedding = Embedding(self.vocab_size, self.embedding_dim, weights=[self.text_embedding_matrix],
                                   input_length=seq_len, trainable=self.text_embedding_trainable,
-                                  embeddings_initializer='he_normal',
                                   mask_zero=self.mask_zeros)(word_input)
         else:
             logging.info("Empty embeddings weights")
             embedding = Embedding(self.vocab_size, self.embedding_dim,
                                   input_length=seq_len, trainable=True,
-                                  embeddings_initializer='he_normal',
                                   embeddings_regularizer=l1_l2(1e-7, 1e-7),
                                   mask_zero=self.mask_zeros)(word_input)
         return word_input, embedding
@@ -101,15 +99,18 @@ class E2eModel(object):
         x = sequence_input
         for _ in range(self.num_lstm_layers):
             x = BatchNormalization(axis=-1)(x)
-            x = LSTM(units=self.lstm_units, return_sequences=True,
+            x = LSTM(units=self.lstm_units,
+                     return_sequences=True,
                      kernel_initializer='he_normal',
+                     kernel_regularizer=l1_l2(1e-7, 1e-7),
                      dropout=self.dropout,
                      recurrent_dropout=self.recurrent_dropout)(x)
 
         if self.additional_dense_layer_dim:
             x = TimeDistributed(Dense(self.additional_dense_layer_dim, kernel_initializer='he_normal'))(x)
             x = TimeDistributed(PReLU())(x)
-        time_dist_dense = TimeDistributed(Dense(self.vocab_size, activation='softmax'))(x)
+
+        time_dist_dense = TimeDistributed(Dense(self.vocab_size))(x)
         return time_dist_dense
 
 
@@ -126,7 +127,7 @@ class ImageFirstE2EModel(E2eModel):
 
     def compile(self, model):
         model.compile(optimizer=Adam(lr=self.learning_rate, clipnorm=5.0),
-                      loss='categorical_crossentropy', sample_weight_mode='temporal')
+                      loss=softmax_cross_entropy_with_logits, sample_weight_mode='temporal')
 
     def _build_model(self):
         img_input, img_model = self._image_model()
