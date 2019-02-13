@@ -35,10 +35,10 @@ def create_embedding_matrix(index, embeddings, dim, special_tokens, init_random=
 
     if init_random:
         print('Embedding random initializer.')
-        matrix = np.random.random((max(index.values()) + 1, vec_dim))
+        matrix = np.random.random((max_word_idx, vec_dim))
     else:
         print('Embedding zeros initializer.')
-        matrix = np.zeros((max(index.values()) + 1, vec_dim))
+        matrix = np.zeros((max_word_idx, vec_dim))
     num_words_in_embedding = 0
     num_lowercase = 0
     num_random = 0
