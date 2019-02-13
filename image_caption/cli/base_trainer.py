@@ -267,7 +267,7 @@ class ImageFirstE2ETrainer(E2ETrainer):
             img_embedding_shape=(299, 299, 3),
             text_embedding_matrix=embedding_matrix,
             max_caption_len=train_seq.max_length,
-            vocab_size=1 + len(tok.index_word),
+            vocab_size=len(tok.index_word),
             embedding_dim=embedding_dim + len(special_tokens),
             text_embedding_trainable=self.text_embedding_trainable,
             img_dense_dim=self.img_dense_dim,

@@ -22,8 +22,17 @@ def load_fasttext(embeddings_path):
     return embeddings_index
 
 
-def create_embedding_matrix(index, embeddings, dim, special_tokens, init_random=False):
+def create_embedding_matrix(index, embeddings, dim, special_tokens, init_random=False, start_at_one=False):
     vec_dim = dim + len(special_tokens)
+
+    # Indices from tokenizer are 1-based.
+    max_word_idx = max(index.values())
+    idx_offset = -1
+    if start_at_one:
+        max_word_idx += 1
+        idx_offset = 0
+    logging.info("Setting max word idx at: {}".format(max_word_idx))
+
     if init_random:
         print('Embedding random initializer.')
         matrix = np.random.random((max(index.values()) + 1, vec_dim))
@@ -37,6 +46,7 @@ def create_embedding_matrix(index, embeddings, dim, special_tokens, init_random=
     matrix[0] = np.zeros((vec_dim,))
     padding = np.zeros((len(special_tokens,)))
     for word, i in index.items():
+        i += idx_offset
         if i < 0:  # remove punctuation.
             continue
         vec = embeddings.get(word)
